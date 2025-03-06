@@ -8,8 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 class Reservable_Spot_Log extends Model
 {
     use HasFactory;
-    public function reservableSpots()
+    protected $guarded= [];
+    public $timestamps = false;
+    public function reservableSpot()
     {
-        return $this->hasMany(Reservable_Spot::class);
+        return $this->belongsTo(Reservable_Spot::class, 'reservable_spot_id');
     }
+    protected $casts = [
+        'entered_at' => 'datetime', // Add this line
+        'exited_at' => 'datetime',  // Optional, if you also want to cast this field
+    ];
 }

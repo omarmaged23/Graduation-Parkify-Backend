@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
             $table->string('license_plate');
-            $table->date('expected_arrival');
+            $table->timestamp('expected_arrival');
             $table->boolean('is_active')->default(1);
             $table->foreignId('reservable_spot_id')->constrained('reservable__spots')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete()->cascadeOnUpdate();

@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('national')->unique();
             $table->string('phone');
-            $table->string('address');
+            $table->string('address')->nullable();
             $table->boolean('is_active')->default(1);
-            $table->float('balance');
-            $table->integer('points');
+            $table->float('balance')->default(0);
+            $table->integer('points')->default(0);
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete()->cascadeOnUpdate();
             $table->timestamps();
         });

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->boolean('is_payed')->default(0);
             $table->timestamp('entered_at');
             $table->timestamp('exited_at')->nullable();
-            $table->foreignId('public_spot_id')->constrained('public__spots')->cascadeOnDelete()->cascadeOnUpdate();
+//            $table->foreignId('public_spot_id')->constrained('public__spots')->cascadeOnDelete()->cascadeOnUpdate();
         });
     }
 

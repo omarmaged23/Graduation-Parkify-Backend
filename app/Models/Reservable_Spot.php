@@ -16,9 +16,10 @@ class Reservable_Spot extends Model
     {
         return $this->belongsTo(Spot_Management::class, 'management_id'); // Custom FK
     }
-    public function reservableSpotLog()
+
+    public function reservableSpotLogs()
     {
-        return $this->belongsTo(Reservable_Spot_Log::class);
+        return $this->hasMany(Reservable_Spot_Log::class, 'reservable_spot_id');
     }
     public function reservations()
     {

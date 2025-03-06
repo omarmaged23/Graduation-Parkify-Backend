@@ -8,8 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 class Public_Spot_Log extends Model
 {
     use HasFactory;
-    public function publicSpots()
+    protected $guarded = [];
+    public $timestamps = false;
+
+    public function publicSpot()
     {
-        return $this->hasMany(Public_Spot::class);
+        return $this->belongsTo(Public_Spot::class);
     }
+    protected $casts = [
+        'entered_at' => 'datetime', // Add this line
+        'exited_at' => 'datetime',  // Optional, if you also want to cast this field
+    ];
 }

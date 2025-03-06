@@ -16,8 +16,8 @@ class Public_Spot extends Model
     {
         return $this->belongsTo(Spot_Management::class, 'management_id'); // Custom FK
     }
-    public function publicSpotLog()
+    public function publicSpotLogs()
     {
-        return $this->belongsTo(Public_Spot_Log::class);
+        return $this->hasMany(Public_Spot_Log::class);
     }
 }

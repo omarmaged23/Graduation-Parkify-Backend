@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('guests', function (Blueprint $table) {
             $table->id();
             $table->string('licesne_plate')->unique();
-            $table->integer('counter')->default(0);
+            $table->integer('counter')->default(1);
             $table->timestamps();
         });
     }
