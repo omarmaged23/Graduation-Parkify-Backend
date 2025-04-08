@@ -23,6 +23,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/register', [UserAuthController::class, 'register']);
 Route::post('/login', [UserAuthController::class, 'login']);
 
+Route::post('/initiatePayment',[\App\Http\Controllers\PaymentController::class,'initiatePayment']);
+Route::post('/paymobCallback',[\App\Http\Controllers\PaymentController::class,'paymobCallback'])->name('paymob.callback');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/setupUser',[UserDataController::class,'setupUser']);
     Route::post('/logout', [UserAuthController::class, 'logout']);

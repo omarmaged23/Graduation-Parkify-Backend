@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\PublishMqttUpdate;
 use App\Models\Guest;
 use App\Models\Guest_Spot_Log;
 use App\Models\License_Plate;
@@ -27,102 +28,96 @@ class SpotLogController extends Controller
          *                              Guest Scenario
          * 6) If it's a guest check the car limit (if exists) and do the necessary operations
      */
+
     public function parkCar(Request $request)
     {
-        return DB::transaction(function () use ($request) {
-            $userPlate = License_Plate::where('plate', $request->plate)->first();
+        $plate = $request->plate;
+        $userPlate = License_Plate::where('plate', $plate)->first();
 
-            if ($userPlate) {
-                return $this->handleUserParking($userPlate);
-            }
+        if ($userPlate) {
+            return $this->handleUserParking($userPlate);
+        }
 
-            return $this->handleGuestParking($request->plate);
-        });
+        return $this->handleGuestParking($plate);
     }
 
     private function handleUserParking($userPlate)
     {
-        return DB::transaction(function () use ($userPlate) {
-            $user = $userPlate->user;
-            $activeReservation = $user->activeReservation;
+        $user = $userPlate->user;
+        $activeReservation = $user->activeReservation;
 
-            if ($activeReservation) {
-                return $this->parkInReservedSpot($activeReservation, $userPlate->plate);
-            }
+        if ($activeReservation) {
+            return $this->parkInReservedSpot($activeReservation, $userPlate->plate);
+        }
 
-            return $this->parkInPublicSpot($userPlate->plate);
-        });
+        return $this->parkInPublicSpot($userPlate->plate);
     }
 
     private function parkInReservedSpot($reservation, $plate)
     {
-        return DB::transaction(function () use ($reservation, $plate) {
-            Reservable_Spot_Log::create([
-                'license_plate' => $plate,
-                'entered_at' => now(),
-                'reservable_spot_id' => $reservation->reservable_spot_id
-            ]);
+        $log = Reservable_Spot_Log::create([
+            'license_plate' => $plate,
+            'entered_at' => now(),
+            'reservable_spot_id' => $reservation->reservable_spot_id
+        ]);
 
-            return response('Success: User reserved car parked');
-        });
+        // ✅ Dispatch MQTT update asynchronously
+        PublishMqttUpdate::dispatch($plate, 'reserved', now());
+
+        return response('Success: User reserved car parked');
     }
 
     private function parkInPublicSpot($plate)
     {
-        return DB::transaction(function () use ($plate) {
-            Public_Spot_Log::create([
-                'license_plate' => $plate,
-                'entered_at' => now()
-            ]);
+        $log = Public_Spot_Log::create([
+            'license_plate' => $plate,
+            'entered_at' => now()
+        ]);
 
-            return response('Success: User car parked');
-        });
+        // ✅ Dispatch MQTT update asynchronously
+        PublishMqttUpdate::dispatch($plate, 'public', now());
+
+        return response('Success: User car parked');
     }
 
     private function handleGuestParking($plate)
     {
-        return DB::transaction(function () use ($plate) {
-            $guestPlate = Guest::where('license_plate', $plate)->first();
+        $guestPlate = Guest::where('license_plate', $plate)->first();
 
-            if (!$guestPlate) {
-                return $this->registerNewGuest($plate);
-            }
+        if (!$guestPlate) {
+            return $this->registerNewGuest($plate);
+        }
 
-            return $this->processGuestParking($guestPlate);
-        });
+        return $this->processGuestParking($guestPlate);
     }
 
     private function registerNewGuest($plate)
     {
-        return DB::transaction(function () use ($plate) {
-            $newGuest = Guest::create(['license_plate' => $plate, 'counter' => 1]);
-
-            return $this->logGuestParking($newGuest);
-        });
+        $newGuest = Guest::create(['license_plate' => $plate, 'counter' => 1]);
+        return $this->logGuestParking($newGuest);
     }
 
     private function processGuestParking($guestPlate)
     {
-        return DB::transaction(function () use ($guestPlate) {
-            if ($guestPlate->counter >= 3) {
-                return response('Failed: Guest parking limit reached');
-            }
+        if ($guestPlate->counter >= 3) {
+            return response('Failed: Guest parking limit reached');
+        }
 
-            $guestPlate->increment('counter');
-            return $this->logGuestParking($guestPlate);
-        });
+        $guestPlate->increment('counter');
+        return $this->logGuestParking($guestPlate);
     }
 
     private function logGuestParking($guestPlate)
     {
-        return DB::transaction(function () use ($guestPlate) {
-            Guest_Spot_Log::create([
-                'guest_plate' => $guestPlate->license_plate,
-                'entered_at' => now()
-            ]);
+        $log = Guest_Spot_Log::create([
+            'guest_plate' => $guestPlate->license_plate,
+            'entered_at' => now()
+        ]);
 
-            return response('Success: Guest car parked');
-        });
+        // ✅ Dispatch MQTT update asynchronously
+        PublishMqttUpdate::dispatch($guestPlate->license_plate, 'guest', now());
+
+        return response('Success: Guest car parked');
     }
 
     /**

@@ -70,4 +70,8 @@ class User extends Authenticatable
     {
         return $this->hasOne(Reservation::class)->where('is_active', 1);
     }
+    public function billings()
+    {
+        return $this->hasMany(Billing::class);
+    }
 }
