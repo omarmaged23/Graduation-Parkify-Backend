@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\NotificationTrait;
 use App\Models\Billing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Twilio\Rest\Client;
 
 class PaymentController extends Controller
 {
+    use NotificationTrait;
     public function getPaymobToken()
     {
         try {
@@ -184,7 +187,7 @@ class PaymentController extends Controller
             }
 
             $billing = Billing::where('paymob_order_id', $paymobOrderId)->firstOrFail();
-
+            $chargeAmount = $billing->amount;
             // Check multiple success indicators
             $isSuccess = (
                 ($request->has('success') && $request->success === 'true') ||
@@ -216,8 +219,10 @@ class PaymentController extends Controller
 //                    'amount' => $billing->amount,
 //                    'transaction_id' => $billing->transaction_id
 //                ]);
-
-                $billing->user->userData()->increment('balance',$billing->amount);
+                $user = $billing->user;
+                $user->userData()->increment('balance',$chargeAmount);
+                $message = "Your account has been recharged with EGP " . $chargeAmount . ". Your new balance is EGP " . $user->userData->balance . ".";
+                $this->sendSms($message, $user->userData->phone);
                 return response()->json(['success' => true, 'message' => 'Payment completed successfully']);
             }
 
