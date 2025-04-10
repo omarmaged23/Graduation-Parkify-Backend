@@ -7,48 +7,59 @@ use Illuminate\Support\Facades\Log;
 
 class MqttService
 {
-//    public static function publish($topic, $message)
-//    {
-//        try {
-//            $mqttBroker = env('MQTT_BROKER', 'broker.hivemq.com');
-//            $mqttPort = env('MQTT_PORT', 1883);
-//            $clientId = 'laravel_publisher_' . uniqid();
-//
-//            $mqttClient = new MqttClient($mqttBroker, $mqttPort, $clientId);
-//            $mqttClient->connect();
-//            $mqttClient->publish($topic, json_encode($message), 0);
-//            $mqttClient->disconnect();
-//        } catch (\Exception $e) {
-//            Log::error("MQTT Publish Error: " . $e->getMessage());
-//        }
-//    }
+    protected static string $server;
+    protected static int $port;
+    protected static ?string $username;
+    protected static ?string $password;
+    protected static string $clientId;
+    protected static bool $useTls;
+    protected static ?ConnectionSettings $connectionSettings = null;
+    protected static ?MqttClient $mqttClient = null;
+
+    private static function init()
+    {
+        self::$server = env('MQTT_HOST', 'broker.hivemq.com');
+        self::$port     = env('MQTT_PORT', 8883);
+        self::$username = env('MQTT_USERNAME', null);
+        self::$password = env('MQTT_PASSWORD', null);
+        self::$clientId = env('MQTT_CLIENT_ID', 'default-client-id');
+        self::$useTls   = env('MQTT_TLS', true);
+
+        self::$connectionSettings = (new ConnectionSettings())
+            ->setUsername(self::$username)
+            ->setPassword(self::$password)
+            ->setKeepAliveInterval(60)
+            ->setUseTls(self::$useTls);
+
+        self::$mqttClient = new MqttClient(self::$server, self::$port, self::$clientId);
+
+        Log::info("MQTT: Initialized with " . self::$server . ':' . self::$port);
+    }
+
+    private static function getConnection()
+    {
+        if (self::$connectionSettings === null) {
+            self::init();
+        }
+
+        if (!self::$mqttClient->isConnected()) {
+            self::$mqttClient->connect(self::$connectionSettings,true);
+        }
+        $server = self::$server;
+        $port = self::$port;
+
+        Log::info("MQTT: Connected to $server:$port...");
+
+        return self::$mqttClient;
+    }
 
     public static function publish($topic, $message)
     {
-        $server   = env('MQTT_HOST', 'broker.hivemq.com');
-        $port     = env('MQTT_PORT', 1883);
-        $username = env('MQTT_USERNAME', null);
-        $password = env('MQTT_PASSWORD', null);
-        $clientId = env('MQTT_CLIENT_ID', 'default-client-id');
-        $useTls   = env('MQTT_TLS', true);
-
-        $connectionSettings = new ConnectionSettings();
-        $connectionSettings = $connectionSettings
-            ->setUsername($username)
-            ->setPassword($password)
-            ->setKeepAliveInterval(60)
-            ->setUseTls($useTls === 'true'); // Convert string "true"/"false" to boolean
-
-        Log::info("MQTT: Connecting to $server:$port...");
-
         try {
-            $mqtt = new MqttClient($server, $port, $clientId);
-            $mqtt->connect($connectionSettings);
-
-            Log::info("MQTT: Connected successfully!");
+            $mqtt = self::getConnection();
 
             $mqtt->publish($topic, json_encode($message), 0);
-            $mqtt->disconnect();
+//            $mqtt->disconnect();
 
             Log::info("MQTT: Message published successfully!");
         } catch (\Exception $e) {
