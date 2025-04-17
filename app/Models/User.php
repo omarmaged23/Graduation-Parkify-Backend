@@ -70,8 +70,25 @@ class User extends Authenticatable
     {
         return $this->hasOne(Reservation::class)->where('is_active', 1);
     }
+    public function activeReservationWithinLimit()
+    {
+        return $this->hasOne(Reservation::class)
+            ->where('is_active', 1)
+            ->where(function($query) {
+                $query->where('expected_arrival', '<=', now()->addMinutes(15))
+                    ->orWhere('expected_arrival', '<', now());
+            });
+    }
     public function billings()
     {
         return $this->hasMany(Billing::class);
+    }
+    public function publicSpotLogs()
+    {
+        return $this->hasMany(Public_Spot_Log::class);
+    }
+    public function reservableSpotLogs()
+    {
+        return $this->hasMany(Reservable_Spot_Log::class);
     }
 }

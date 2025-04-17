@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('public__spot__logs', function (Blueprint $table) {
             $table->id();
             $table->string('license_plate');
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete()->cascadeOnUpdate();
             $table->float('invoice_price')->nullable();
             $table->boolean('is_payed')->default(0);
             $table->timestamp('entered_at');

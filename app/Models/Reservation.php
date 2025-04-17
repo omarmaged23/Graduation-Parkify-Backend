@@ -8,16 +8,23 @@ use Illuminate\Database\Eloquent\Model;
 class Reservation extends Model
 {
     use HasFactory;
+    protected $guarded = [];
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
     public function reservableSpot()
     {
         return $this->belongsTo(Reservable_Spot::class);
     }
+
     public function reservationBlocker()
     {
         return $this->hasOne(Reservation_Blocker::class);
     }
+
+    protected $casts = [
+        'expected_arrival' => 'datetime',
+    ];
 }

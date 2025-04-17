@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('billings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->string('license_plate')->nullable();
             $table->decimal('amount', 10, 2);
             $table->string('currency')->default('EGP');
             $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');

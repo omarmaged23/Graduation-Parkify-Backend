@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Reservable_Spot extends Model
 {
     use HasFactory;
+    protected $guarded = [];
     public function location()
     {
         return $this->belongsTo(Location::class);
@@ -23,6 +24,6 @@ class Reservable_Spot extends Model
     }
     public function reservations()
     {
-        return $this->hasMany(Reservation::class);
+        return $this->hasMany(Reservation::class, 'reservable_spot_id');
     }
 }

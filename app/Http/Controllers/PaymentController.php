@@ -4,14 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Traits\NotificationTrait;
 use App\Models\Billing;
+use App\Models\Guest_Spot_Log;
+use App\Models\Mqtt_Spot_Log;
+use App\Services\MqttService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Twilio\Rest\Client;
 
 class PaymentController extends Controller
 {
     use NotificationTrait;
+
     public function getPaymobToken()
     {
         try {
@@ -84,6 +87,85 @@ class PaymentController extends Controller
             Log::error('Paymob Payment Key Error', ['error' => $e->getMessage()]);
             return null;
         }
+    }
+
+    public function guestPayment($amount, $plate)
+    {
+        if ($amount < 1) {
+            $amount = 1;
+        } else {
+            $amount = floor($amount);
+        }
+        $amountCents = $amount * 100;
+        $method = 'card';
+        $billing = Billing::create([
+            'amount' => $amount,
+            'currency' => 'EGP',
+            'status' => 'pending',
+            'method' => $method,
+            'license_plate' => $plate,
+        ]);
+        // Step 1: Get Authentication Token
+        $authToken = $this->getPaymobToken();
+        if (!$authToken) {
+            $billing->update(['status' => 'failed']);
+            return false;
+        }
+
+        // Step 2: Create Order - include billing ID in merchant_order_id
+        $orderId = $this->addBalance($authToken, $amountCents);
+        if (!$orderId) {
+            $billing->update(['status' => 'failed']);
+            return false;
+        }
+
+        // Update billing with Paymob order ID
+        $billing->update(['paymob_order_id' => $orderId]);
+
+        // Step 3: Generate Payment Key
+        $integrationIds = [
+            'card' => env('PAYMOB_CARD_INTEGRATION_ID'),
+            'wallet' => env('PAYMOB_WALLET_INTEGRATION_ID'),
+        ];
+        $billingData = [
+            "apartment" => "NA",
+            "email" => "guest@mail.com",
+            "floor" => "NA",
+            "first_name" => "Guest",
+            "street" => "NA",
+            "building" => "NA",
+            "phone_number" => '+201000000000',
+            "shipping_method" => "NA",
+            "postal_code" => "NA",
+            "city" => "NA",
+            "country" => "EG",
+            "last_name" => "NA",
+            "state" => "NA"
+        ];
+
+        // Include billing ID in the callback URL
+        $callbackUrl = route('paymob.callback');
+
+        $paymentKey = $this->generatePaymentKey(
+            $authToken,
+            $orderId,
+            $amountCents,
+            array_merge($billingData, ['callback_url' => $callbackUrl]),
+            $integrationIds[$method]
+        );
+        if (!$paymentKey) {
+            $billing->update(['status' => 'failed']);
+            return false;
+        }
+
+        // Step 4: Generate Payment URL
+        $iframeIds = [
+            'card' => env('PAYMOB_CARD_IFRAME_ID'),
+            'wallet' => env('PAYMOB_WALLET_IFRAME_ID'),
+        ];
+
+        $paymentUrl = "https://accept.paymob.com/api/acceptance/iframes/{$iframeIds[$method]}?payment_token=$paymentKey";
+        return response($paymentUrl);
     }
 
     public function initiatePayment(Request $request)
@@ -219,10 +301,19 @@ class PaymentController extends Controller
 //                    'amount' => $billing->amount,
 //                    'transaction_id' => $billing->transaction_id
 //                ]);
-                $user = $billing->user;
-                $user->userData()->increment('balance',$chargeAmount);
-                $message = "Your account has been recharged with EGP " . $chargeAmount . ". Your new balance is EGP " . $user->userData->balance . ".";
-                $this->sendSms($message, $user->userData->phone);
+                if ($billing->user_id) {
+                    $user = $billing->user;
+                    $user->userData()->increment('balance', $chargeAmount);
+                    $message = "Your account has been recharged with EGP " . $chargeAmount . ". Your new balance is EGP " . $user->userData->balance . ".";
+                    $this->sendSms($message, $user->userData->phone);
+                } else {
+                    $plate = $billing->license_plate;
+                    Guest_Spot_Log::where('license_plate', $plate)->latest('id')->first()->update([
+                        'is_payed' => 1
+                    ]);
+                    (new MqttService())->publish('gate/exit', 'open');
+                    (new Mqtt_Spot_Log())->where('license_plate', $plate)->delete();
+                }
                 return response()->json(['success' => true, 'message' => 'Payment completed successfully']);
             }
 
