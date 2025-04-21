@@ -175,7 +175,7 @@ class PaymentController extends Controller
             'method' => 'required|in:card,wallet'
         ]);
 
-        $user = auth()->user();
+        $user = auth('api')->user();
         $amountCents = $request->amount * 100;
 
         // Create billing record first
@@ -305,7 +305,7 @@ class PaymentController extends Controller
                     $user = $billing->user;
                     $user->userData()->increment('balance', $chargeAmount);
                     $message = "Your account has been recharged with EGP " . $chargeAmount . ". Your new balance is EGP " . $user->userData->balance . ".";
-                    $this->sendSms($message, $user->userData->phone);
+//                    $this->sendSms($message, $user->userData->phone);
                 } else {
                     $plate = $billing->license_plate;
                     Guest_Spot_Log::where('license_plate', $plate)->latest('id')->first()->update([

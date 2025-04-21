@@ -9,6 +9,6 @@ class PublicSpotLogController extends Controller
 {
     public function getPublicSpotLog()
     {
-        return auth()->user()->publicSpotLogs()->limit(10)->get();
+        return auth('api')->user()->publicSpotLogs()->limit(10)->get();
     }
 }

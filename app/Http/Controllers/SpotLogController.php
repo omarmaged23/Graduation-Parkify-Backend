@@ -11,6 +11,7 @@ use App\Models\Public_Spot;
 use App\Models\Public_Spot_Log;
 use App\Models\Reservable_Spot_Log;
 use App\Models\Spot_Management;
+use App\Models\User_Gift;
 use App\Services\MqttService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -64,27 +65,29 @@ class SpotLogController extends Controller
             $activeReservation = $user->activeReservation;
 
             if ($activeReservation && $user->activeReservationWithinLimit) {
-                return $this->parkInReservedSpot($activeReservation, $userPlate->plate);
+                return $this->parkInReservedSpot($activeReservation, $userPlate->plate, $user->id);
             } else if ($activeReservation) {
-                return response('User have active reservation but arrived earlier than expected, you can enter garage 15 minutes earlier the reservation or you are not authorized');
+                return response()->json(['error'=>'User have active reservation but arrived earlier than expected, you can enter garage 15 minutes earlier the reservation or you are not authorized'],422);
             } else {
-                return $this->parkInPublicSpot($userPlate->plate);
+                return $this->parkInPublicSpot($userPlate->plate, $user->id);
             }
 
         });
     }
 
-    private function checkOrCreateLog($modelClass, $plate, $location, $enteredAt, $reservable_spot_id = null)
+    private function checkOrCreateLog($modelClass, $plate, $location, $enteredAt, $user_id ,$reservable_spot_id = null)
     {
         $log = $modelClass::where([
             ['license_plate', '=', $plate],
             ['is_payed', '=', 0],
-        ])->whereDate('entered_at', Carbon::today())->first();
+            ['user_id', '=', $user_id],
+        ])->whereDate('entered_at', Carbon::today())->orderBy('entered_at', 'desc')->first();
 
         if (!$log) {
             $data = [
                 'license_plate' => $plate,
                 'entered_at' => $enteredAt,
+                'user_id' => $user_id,
             ];
             $reservable_spot_id ? $data['reservable_spot_id'] = $reservable_spot_id : $reservable_spot_id = null;
 
@@ -97,11 +100,11 @@ class SpotLogController extends Controller
         $this->mqttService->publish('gate/entry', 'open');
     }
 
-    private function parkInReservedSpot($reservation, $plate)
+    private function parkInReservedSpot($reservation, $plate,$user_id)
     {
-        return DB::transaction(function () use ($reservation, $plate) {
-            $this->checkOrCreateLog(Reservable_Spot_Log::class, $plate, 'Reservable Spot', $this->entered_at, $reservation->reservable_spot_id);
-            return response('Success: User reserved car parked');
+        return DB::transaction(function () use ($reservation, $plate,$user_id) {
+            $this->checkOrCreateLog(Reservable_Spot_Log::class, $plate, 'Reservable Spot', $this->entered_at,$user_id ,$reservation->reservable_spot_id);
+            return response()->json(['success' => 'User reserved car parked']);
         });
     }
 
@@ -112,14 +115,14 @@ class SpotLogController extends Controller
         return $allSpots == $usedSpots;
     }
 
-    private function parkInPublicSpot($plate)
+    private function parkInPublicSpot($plate,$user_id)
     {
-        return DB::transaction(function () use ($plate) {
+        return DB::transaction(function () use ($plate,$user_id) {
             if ($this->checkPublicSpotAvailability()) {
-                return response('Not enough spots');
+                return response()->json(['error'=>'Not enough spots'],422);
             }
-            $this->checkOrCreateLog(Public_Spot_Log::class, $plate, 'Public Spot', $this->entered_at);
-            return response('Success: User car parked');
+            $this->checkOrCreateLog(Public_Spot_Log::class, $plate, 'Public Spot', $this->entered_at,$user_id);
+            return response()->json(['success' => 'User car parked']);
         });
     }
 
@@ -128,7 +131,7 @@ class SpotLogController extends Controller
         return DB::transaction(function () use ($plate) {
 
             if ($this->checkPublicSpotAvailability()) {
-                return response('Not enough spots');
+                return response()->json(['error'=>'Not enough spots'],422);
             }
 
             $guestPlate = Guest::where('license_plate', $plate)->first();
@@ -155,11 +158,11 @@ class SpotLogController extends Controller
         return DB::transaction(function () use ($guestPlate) {
             if (Mqtt_Spot_Log::where('license_plate', $guestPlate->license_plate)->exists()) {
                 $this->mqttService->publish('gate/entry', 'open');
-                return response('Guest Already In Garage');
+                return response()->json(['error' => 'Guest Already In Garage'],422);
             }
 
             if ($guestPlate->counter >= 3) {
-                return response('Failed: Guest parking limit reached');
+                return response()->json(['error'=>'Guest parking limit reached']);
             }
 
             $guestPlate->increment('counter');
@@ -170,8 +173,8 @@ class SpotLogController extends Controller
     private function logGuestParking($guestPlate)
     {
         return DB::transaction(function () use ($guestPlate) {
-            $this->checkOrCreateLog(Guest_Spot_Log::class, $guestPlate->license_plate, 'Public Spot', $this->entered_at);
-            return response('Success: Guest car parked');
+            $this->checkOrCreateLog(Guest_Spot_Log::class, $guestPlate->license_plate, 'Public Spot', $this->entered_at,null);
+            return response()->json(['success' => 'Guest car parked']);
         });
     }
 
@@ -187,9 +190,9 @@ class SpotLogController extends Controller
         }
 
         $count = Mqtt_Spot_Log::LocationCount($location);
-
+        $publicSpots = Public_Spot::count();
         // Publish to MQTT
-        $this->mqttService->publish('spot/log', $count);
+        $this->mqttService->publish('spot/log', $publicSpots - $count);
     }
 
     /**
@@ -215,7 +218,7 @@ class SpotLogController extends Controller
             $activeReservation = $user->activeReservation;
 
             if ($activeReservation) {
-                return $this->processExit($user, Reservable_Spot_Log::class, $userPlate->plate);
+                return $this->processExit($user, Reservable_Spot_Log::class, $userPlate->plate );
             }
             return $this->processExit($user, Public_Spot_Log::class, $userPlate->plate, 'public');
         });
@@ -226,7 +229,7 @@ class SpotLogController extends Controller
         return DB::transaction(function () use ($plate) {
             $guestPlate = Guest::where('license_plate', $plate)->first();
             if (!$guestPlate) {
-                return response('Guest has no entry logs or plate is misread');
+                return response()->json(['error'=>'Guest has no entry logs or plate is misread'],422);
             }
             return $this->processExit(null, Guest_Spot_Log::class, $plate, 'public', false);
         });
@@ -248,17 +251,28 @@ class SpotLogController extends Controller
                 $currentLog = $logModel::where([
                     ['license_plate', $plate],
                     ['is_payed', 1],
-                ])->orderBy('entered_at', 'desc')->first();
+                    ['exited_at', '>=', now()->subMinutes(10)]
+                ])->orderBy('exited_at', 'desc')->first();
                 if ($currentLog) {
                     $this->mqttService->publish('gate/exit', 'open');
                     return response('User already paid for exit');
                 }
                 return response('User has no entry logs');
             }
-
-            $parkingTime = round($currentLog->entered_at->floatDiffInHours($this->exitTime), 2);
-            $parkingPricePerHour = Spot_Management::where('type', $spotType ?: 'reservable')->first()->price_per_hour;
-            $invoice = $parkingTime * $parkingPricePerHour;
+            if($spotType){
+                $entry = $currentLog->entered_at;
+            }else{
+                $entry = $user->activeReservation->expected_arrival;
+            }
+            $parkingTime = round($entry->floatDiffInHours($this->exitTime), 2);
+            $parkingPrice = Spot_Management::where('type', $spotType ?: 'reservable')->first();
+            if(!$user){
+                $hourPrice = $parkingPrice->price_per_hour + $parkingPrice->additional_guest_fees;
+            }
+            else{
+                $hourPrice = $parkingPrice->price_per_hour;
+            }
+            $invoice = $parkingTime * $hourPrice;
             $data = [
                 'invoice_price' => $invoice,
                 'exited_at' => $this->exitTime
@@ -266,15 +280,40 @@ class SpotLogController extends Controller
             if ($user && $deductBalance) {
                 $balance = $user->userData->balance;
                 $status = null;
-                $balance < $invoice ? $this->sendSms("You don't have enough balance to pay for spot. Your invoice is $invoice and your current balance is $balance.", $user->userData->phone) : $status = true;
+//                $balance < $invoice ? $this->sendSms("You don't have enough balance to pay for spot. Your invoice is $invoice and your current balance is $balance.", $user->userData->phone) : $status = true;
+                $balance < $invoice ? $status = null : $status = true;
                 if ($status == null)
                     return response('Insufficient balance.' . $invoice);
-                $user->userData()->decrement('balance', $invoice);
-                $user->activeReservation()->update(['is_active' => 0]);
-                $data['is_payed'] = 1;
-                $currentLog->update($data);
+            // Code discount logic here
+                $userGift = User_Gift::where([['is_active',1],
+                    ['user_id',$user->id]])
+                    ->first();
+                if ($userGift) {
+                    $invoice = $invoice * (100 - (float) $userGift->gift->discount_percentage) / 100;
+                    $data['invoice_price']=$invoice;
+                }
+                $userPoints = (int) round($parkingPrice->points_per_hour *  $parkingTime);
+
+                try {
+                    DB::transaction(function () use ($currentLog,$user,$userGift,$data,$invoice,$spotType,$userPoints) {
+                        $user->userData()->decrement('balance', $invoice);
+                        $user->userData()->increment('points', $userPoints);
+                        if(!$spotType){
+                            $user->activeReservation()->update(['is_active' => 0]);
+                            $user->activeReservation->reservableSpot->update(['is_occupied' => 0]);
+                        }
+                        if($userGift){
+                            $userGift->update(['applied_to_payment' => 0,'is_active' => 0]);
+                        }
+                        $data['is_payed'] = 1;
+                        $currentLog->update($data);
+                    });
+                } catch (\Exception $e){
+                    return response()->json(['error'=>$e->getMessage()],422);
+                }
                 Mqtt_Spot_Log::where('license_plate', $plate)->delete();
                 $this->mqttService->publish('gate/exit', 'open');
+                $this->logAndPublish(null,'Public Spot',false);
             } else {
                 $guestPayment = (new PaymentController())->guestPayment($invoice, $currentLog->license_plate);
                 if ($guestPayment) {

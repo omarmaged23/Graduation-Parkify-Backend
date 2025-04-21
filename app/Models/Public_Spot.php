@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Public_Spot extends Model
 {
     use HasFactory;
+    protected $guarded = [];
     public function location()
     {
         return $this->belongsTo(Location::class);

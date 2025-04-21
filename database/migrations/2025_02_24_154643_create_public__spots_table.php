@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('public__spots', function (Blueprint $table) {
             $table->id();
-            $table->string('spot_code');
+            $table->string('spot_code')->unique();
             $table->foreignId('management_id')->constrained('spot__management')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('location_id')->constrained('locations')->cascadeOnDelete()->cascadeOnUpdate();
             $table->timestamps();

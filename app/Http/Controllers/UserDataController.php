@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UserDataController extends Controller
 {
     public function setupUser(Request $request){
-        $user = $request->user();
+        $user = auth('api')->user();
 
         if ($user->userData && $user->userData->national && $user->userData->phone) {
-            return response()->json(['msg' => 'You already have national ID and phone attached to your account'], 409);
+            return response()->json(['error' => 'You already have national ID and phone attached to your account'], 422);
         }
         $request->validate([
             'national' => ['required', 'string', 'unique:user__data,national' ,'size:14', 'regex:/^\d{14}$/'],
@@ -28,4 +30,5 @@ class UserDataController extends Controller
         ]);
         return $plates;
     }
+
 }

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Spot_Management extends Model
 {
     use HasFactory;
+    protected $guarded = [];
     public function publicSpots()
     {
         return $this->hasMany(Public_Spot::class, 'management_id');

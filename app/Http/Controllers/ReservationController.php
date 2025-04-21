@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Reservable_Spot;
 use App\Models\Spot_Management;
+use App\Services\MqttService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,11 +17,11 @@ class ReservationController extends Controller
             'plate' => 'required',
             'reserve_at' => 'required|date_format:Y-m-d H:i:s',
         ]);
-
+        $reservableSpot = Spot_Management::where('type','reservable')->first();
         // reservation time >= now + 1 hour --- Proceed
         $reservationTimeStamp= Carbon::parse($request->reserve_at);
         $currentTime = Carbon::now();
-        $minAllowedTime = $currentTime->copy()->addHour();
+        $minAllowedTime = $currentTime->copy()->addMinutes($reservableSpot->time_restriction);
         $maxAllowedTime = $currentTime->copy()->addDay();
         if($reservationTimeStamp < $minAllowedTime){
             return response()->json(['error'=>'reservation time is not valid, you must reserve at least one hour before the intended time'],422);
@@ -34,13 +35,13 @@ class ReservationController extends Controller
         }
 
         // Check if plate belongs to user
-        $plate = auth()->user()->licensePlates->where('plate',$request->plate);
+        $plate = auth('api')->user()->licensePlates->where('plate',$request->plate);
         if(!$plate){
             return response()->json(['error'=>'plate not found'],422);
         }
 
         // check if this plate has an active reservation
-        $acitvePlateReservation = auth()->user()->reservations->where('is_active',1)->where('license_plate',$request->plate);
+        $acitvePlateReservation = auth('api')->user()->reservations->where('is_active',1)->where('license_plate',$request->plate)->first();
         if($acitvePlateReservation){
             return response()->json(['error'=>'plate already has reservation'],422);
         }
@@ -53,21 +54,21 @@ class ReservationController extends Controller
 
         // now make sure user has enough balance in his account
         $hourDifference = $currentTime->floatDiffInHours($reservationTimeStamp);
-        $reservationFees = Spot_Management::where('type','reservable')->first()->reservation_fees;
+        $reservationFees = $reservableSpot->reservation_fees;
         $reservationFees*=$hourDifference;
 
-        $userBalance = auth()->user()->userData->balance;
+        $userBalance = auth('api')->user()->userData->balance;
         if($userBalance < $reservationFees){
             return response()->json(['error'=>'please add more balance to your account'],422);
         }
         // Otherwise deduct fees and confirm
         $transaction = DB::transaction(function () use ($request,$reservationFees,$reservationTimeStamp){
-            $balance = auth()->user()->userData()->decrement('balance',$reservationFees);
+            $balance = auth('api')->user()->userData()->decrement('balance',$reservationFees);
             $spot = Reservable_Spot::where('is_occupied',0)->first();
             $reservation = $spot->reservations()->create([
                 'license_plate' => $request->plate,
                 'expected_arrival' => $request->reserve_at,
-                'user_id' => auth()->user()->id,
+                'user_id' => auth('api')->user()->id,
             ]);
             $spot->update(['is_occupied' => 1]);
             if(!$reservation | !$balance){
@@ -76,5 +77,27 @@ class ReservationController extends Controller
             return response()->json(['success'=>$reservation,'spot'=>$spot,'reservation_time'=> $reservationTimeStamp->format('F j \a\t g A')],200);
         });
         return $transaction;
+    }
+    public function cancelReservation(Request $request){
+        $reservation = auth('api')->user()->activeReservation;
+        if(!$reservation){
+            return response()->json(['error'=>'reservation not found'],422);
+        }
+        $status = $reservation->delete();
+        if (!$status){
+            return response()->json(['error'=>'cancellation failed'],422);
+        }
+        return response()->json(['success'=>'reservation cancelled successfully'],200);
+    }
+    public function deactivateReservationBlocker(Request $request)
+    {
+        try{
+            $spot = auth('api')->user()->activeReservation->reservableSpot->spot_code;
+            $mqtt = new MqttService();
+            $mqtt->publish('blocker/open',$spot);
+            return response()->json(['success'=>'blocker deactivated successfully'],200);
+        } catch (\Exception $exception){
+            return response()->json(['error'=>$exception->getMessage()],422);
+        }
     }
 }
