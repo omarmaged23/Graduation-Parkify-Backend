@@ -1,5 +1,8 @@
 {
     "build": {
-      "phpExtensions": ["gd", "imagick"]
+      "phpExtensions": ["gd", "imagick"],  
+      "nixpacks": {
+        "buildCommand": "composer install --optimize-autoloader --no-dev" 
+      }
     }
-}
+  }
