@@ -6,6 +6,7 @@ use App\Http\Controllers\Traits\NotificationTrait;
 use App\Models\Billing;
 use App\Models\Guest_Spot_Log;
 use App\Models\Mqtt_Spot_Log;
+use App\Models\Public_Spot;
 use App\Services\MqttService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -311,7 +312,11 @@ class PaymentController extends Controller
                     Guest_Spot_Log::where('license_plate', $plate)->latest('id')->first()->update([
                         'is_payed' => 1
                     ]);
-                    (new MqttService())->publish('gate/exit', 'open');
+                    $count = Mqtt_Spot_Log::LocationCount('Public Spot');
+                    $publicSpots = Public_Spot::count();
+                    // Publish to MQTT
+                    (new MqttService())->publish('garage/available_spots', $publicSpots - $count);
+                    (new MqttService())->publish('garage/exit_gate', 'open');
                     (new Mqtt_Spot_Log())->where('license_plate', $plate)->delete();
                 }
                 return response()->json(['success' => true, 'message' => 'Payment completed successfully']);

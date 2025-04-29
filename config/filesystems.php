@@ -55,6 +55,15 @@ return [
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
         ],
+        'filebase' => [
+            'driver' => 's3',
+            'key'    => env('FILEBASE_ACCESS_KEY'),
+            'secret' => env('FILEBASE_SECRET_KEY'),
+            'region' => env('FILEBASE_REGION'),
+            'bucket' => env('FILEBASE_BUCKET'),
+            'endpoint' => env('FILEBASE_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+        ],
 
     ],
 

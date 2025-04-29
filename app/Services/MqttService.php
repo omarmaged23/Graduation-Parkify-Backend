@@ -58,7 +58,7 @@ class MqttService
         try {
             $mqtt = self::getConnection();
 
-            $mqtt->publish($topic, json_encode($message), 0);
+            $mqtt->publish($topic, $message, 0,true);
 //            $mqtt->disconnect();
 
             Log::info("MQTT: Message published successfully!");

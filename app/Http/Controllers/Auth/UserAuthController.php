@@ -35,21 +35,33 @@ class UserAuthController extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
-
-        $user = User::where('email', $request->email)->first();
-
+    
+        // Get ONLY what we need for auth
+        $user = User::where('email', $request->email)
+            ->select(['id', 'name', 'email', 'password', 'email_verified_at'])
+            ->first();
+    
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages(['email' => ['Invalid credentials']]);
         }
-        // if user completed his account registration get his data.
-        $data = $user->userData;
-        $data ? $accountStatus = $data->is_active : $accountStatus = true;
-        if(!$accountStatus){
+    
+        // Check account status WITHOUT auto-loading userData
+        $accountStatus = $user->userData()->exists() 
+            ? $user->userData->is_active 
+            : true;
+    
+        if (!$accountStatus) {
             throw ValidationException::withMessages(['status' => ['Account is not active']]);
         }
+    
         $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json(['token' => $token, 'user' => $user,'userData'=>$data ?? null]);
+    
+        // Return minimal user data (optional: add ->makeHidden('password'))
+        return response()->json([
+            'token' => $token,
+            'user' => $user->only('id', 'name', 'email', 'email_verified_at'),
+            'userData' => $user->relationLoaded('userData') ? $user->userData : null
+        ]);
     }
 
     public function logout(Request $request)

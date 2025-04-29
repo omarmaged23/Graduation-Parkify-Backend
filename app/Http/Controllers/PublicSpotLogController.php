@@ -9,6 +9,11 @@ class PublicSpotLogController extends Controller
 {
     public function getPublicSpotLog()
     {
-        return auth('api')->user()->publicSpotLogs()->limit(10)->get();
+        return auth('api')->user()->publicSpotLogs()
+        ->limit(10)
+        ->get()
+        ->map(function ($spot) {
+            return $spot->toArray() + ['spot_code' => 'Public Spot'];
+        });
     }
 }

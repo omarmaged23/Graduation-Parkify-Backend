@@ -28,7 +28,7 @@ class UserDataController extends Controller
         $plates = $user->licensePlates()->create([
             'plate' => $request->plate
         ]);
-        return $plates;
+        return response()->json(['userData'=>$user->userData]);
     }
 
 }

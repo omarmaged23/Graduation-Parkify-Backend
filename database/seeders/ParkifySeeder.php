@@ -6,6 +6,8 @@ use App\Models\Admin;
 use App\Models\Gift;
 use App\Models\Location;
 use App\Models\Public_Spot;
+use App\Models\Public_Spot_Log;
+use App\Models\Reservable_Spot_Log;
 use App\Models\Refund;
 use App\Models\Reservable_Spot;
 use App\Models\Spot_Management;
@@ -25,17 +27,17 @@ class ParkifySeeder extends Seeder
         $user1 = User::create([
             'name' =>'omar maged',
             'email' => 'omar@gmail.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('Omar*123'),
         ]);
         $user2 = User::create([
             'name' =>'omar khaled',
             'email' => 'omarkhaled@gmail.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('Omar*123'),
         ]);
         $user3 = User::create([
             'name' =>'mohsen',
             'email' => 'mohsen@gmail.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('Omar*123'),
         ]);
         $user4 = User::create([
             'name' =>'ali abdo',
@@ -131,7 +133,7 @@ class ParkifySeeder extends Seeder
         Spot_Management::create([
             'type' => 'reservable',
             'price_per_hour' => 50,
-            'time_restriction' => 60,
+            'time_restriction' => 5,
             'reservation_fees' => 30,
             'points_per_hour' => 25,
         ]);
@@ -179,7 +181,331 @@ class ParkifySeeder extends Seeder
             'management_id'=> 1,
             'location_id'=> 1,
         ]);
-
+        // generate spot logs with payed status
+        Public_Spot_Log::create([
+            'license_plate' => 'ق ص س 4 3 1' ,
+            'user_id' => 1,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now(),
+            'exited_at' => now()->addHour(),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ق ص س 4 3 1' ,
+            'user_id' => 1,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->subMinutes(120),
+            'exited_at' => now()->subHours(1),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(15),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(16),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(17),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(18),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(19),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(20),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(21),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(22),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(23),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(24),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(25),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(26),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(27),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(28),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(29),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(30),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Public_Spot_Log::create([
+            'license_plate' => 'م م ع 4 3 1' ,
+            'user_id' => 3,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(31),
+            'exited_at' => now()->addHours(3),
+        ]);
+        // generate reservablespot logs with payed status
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 1,
+            'license_plate' => 'ق ص س 4 3 1' ,
+            'user_id' => 1,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now(),
+            'exited_at' => now()->addHour(),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 2,
+            'license_plate' => 'ق ص س 4 3 1' ,
+            'user_id' => 1,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->subMinutes(120),
+            'exited_at' => now()->subHours(1),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 3,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(15),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 4,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(16),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 1,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(17),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 2,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(18),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 3,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(19),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 4,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(20),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 1,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(21),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 2,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(22),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 3,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(23),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 4,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(24),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 1,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(25),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 2,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(26),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 3,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(27),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 4,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(28),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 1,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(29),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 2,
+            'license_plate' => 'ي ي ي 1 1 1' ,
+            'user_id' => 2,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(30),
+            'exited_at' => now()->addHours(2),
+        ]);
+        Reservable_Spot_Log::create([
+            'reservable_spot_id' => 3,
+            'license_plate' => 'م م ع 4 3 1' ,
+            'user_id' => 3,
+            'invoice_price' => '231.4',
+            'is_payed' => 1,
+            'entered_at' => now()->addMinutes(31),
+            'exited_at' => now()->addHours(3),
+        ]);
         // generate admin account
         Admin::create([
             'name' => 'omar maged',
