@@ -47,6 +47,8 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/user/deactivateGift',[\App\Http\Controllers\UserGiftController::class,'deactivateGift']);
     // Ask for payment request
     Route::post('/initiatePayment',[\App\Http\Controllers\PaymentController::class,'initiatePayment']);
+    // Get user transaction history
+    Route::get('/user/getTransactionHistory',[userDataController::class,'getTransactionHistory']);
 });
 Route::middleware('auth:admin')->group(function () {
     // Logout

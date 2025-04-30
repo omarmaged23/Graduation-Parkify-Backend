@@ -15,4 +15,7 @@ class Billing extends Model
     {
         return $this->belongsTo(User::class);
     }
+    // protected $casts = [
+    //     'completed_at' => 'datetime',
+    // ];
 }

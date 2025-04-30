@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('paymob_order_id')->nullable();
             $table->string('transaction_id')->nullable();
             $table->timestamp('completed_at')->nullable();
+            // $table->timestamps();
         });
     }
 

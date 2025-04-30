@@ -357,7 +357,8 @@ class SpotLogController extends Controller
                 if ($guestPayment) {
                     $qrPath = QrCode::format('png')
                         ->size(450)
-                        ->margin(2)
+                        ->margin(1)
+                        ->backend('gd')
                         ->errorCorrection('H')
                         ->generate($guestPayment);
 

@@ -48,7 +48,9 @@ class ParkifySeeder extends Seeder
         // generate their needed data
         $user1->userData()->create([
             'national' => '33333333333333',
-            'phone' => '01141667608'
+            'phone' => '01141667608',
+            'balance' => '100000',
+            'points' => '100000',
         ]);
         $user1->licensePlates()->create([
             'plate' => 'ق ص س 4 3 1'
@@ -56,7 +58,9 @@ class ParkifySeeder extends Seeder
 
         $user2->userData()->create([
             'national' => '44444444444444',
-            'phone' => '01555899576'
+            'phone' => '01555899576',
+            'balance' => '100000',
+            'points' => '100000',
         ]);
         $user2->licensePlates()->create([
             'plate' => 'ي ي ي 1 1 1'
@@ -64,7 +68,9 @@ class ParkifySeeder extends Seeder
 
         $user3->userData()->create([
             'national' => '55555555555555',
-            'phone' => '01002319312'
+            'phone' => '01002319312',
+            'balance' => '100000',
+            'points' => '100000',
         ]);
         $user3->licensePlates()->create([
             'plate' => 'م م ع 4 3 1'
@@ -72,7 +78,9 @@ class ParkifySeeder extends Seeder
 
         $user4->userData()->create([
             'national' => '66666666666666',
-            'phone' => '01007788459'
+            'phone' => '01007788459',
+            'balance' => '100000',
+            'points' => '100000',
         ]);
         $user4->licensePlates()->create([
             'plate' => 'أ ي ي ي 4 3 1'

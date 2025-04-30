@@ -186,19 +186,21 @@ class PaymentController extends Controller
             'currency' => 'EGP',
             'status' => 'pending',
             'method' => $request->input('method'),
+            'message' => 'Transaction is being processed.',
+            'completed_at' => now()
         ]);
 
         // Step 1: Get Authentication Token
         $authToken = $this->getPaymobToken();
         if (!$authToken) {
-            $billing->update(['status' => 'failed']);
+            $billing->update(['status' => 'failed' ,'message' => "Something went wrong.\nPlease contact application support"]);
             return response()->json(['error' => 'Payment gateway authentication failed'], 500);
         }
 
         // Step 2: Create Order - include billing ID in merchant_order_id
         $orderId = $this->addBalance($authToken, $amountCents);
         if (!$orderId) {
-            $billing->update(['status' => 'failed']);
+            $billing->update(['status' => 'failed','message' => "Something went wrong.\nPlease contact application support"]);
             return response()->json(['error' => 'Order creation failed'], 500);
         }
 
@@ -239,7 +241,7 @@ class PaymentController extends Controller
         );
 
         if (!$paymentKey) {
-            $billing->update(['status' => 'failed']);
+            $billing->update(['status' => 'failed','message' => "Something went wrong.\nPlease contact application support"]);
             return response()->json(['error' => 'Payment key generation failed'], 500);
         }
 
@@ -254,8 +256,8 @@ class PaymentController extends Controller
         return response()->json([
             'success' => true,
             'payment_url' => $paymentUrl,
-            'payment_token' => $paymentKey,
-            'iframe_id' => $iframeIds[$request->input('method')]
+            // 'payment_token' => $paymentKey,
+            // 'iframe_id' => $iframeIds[$request->input('method')]
         ]);
     }
 
@@ -306,6 +308,7 @@ class PaymentController extends Controller
                     $user = $billing->user;
                     $user->userData()->increment('balance', $chargeAmount);
                     $message = "Your account has been recharged with EGP " . $chargeAmount . ". Your new balance is EGP " . $user->userData->balance . ".";
+                    $billing->update(['message' => $message]);  
 //                    $this->sendSms($message, $user->userData->phone);
                 } else {
                     $plate = $billing->license_plate;
@@ -316,6 +319,7 @@ class PaymentController extends Controller
                     $publicSpots = Public_Spot::count();
                     // Publish to MQTT
                     (new MqttService())->publish('garage/available_spots', $publicSpots - $count);
+                    (new MqttService())->publish('garage/exit/display/qrcode', '');
                     (new MqttService())->publish('garage/exit_gate', 'open');
                     (new Mqtt_Spot_Log())->where('license_plate', $plate)->delete();
                 }
@@ -328,7 +332,7 @@ class PaymentController extends Controller
 //                'isCaptured' => $isCaptured,
 //                'request_data' => $request->all()
 //            ]);
-
+            $billing->update(['message'=>'Transaction failed, please make sure your card has enough credits or contact your bank.']);
             return response()->json(['success' => false, 'message' => 'Payment not completed'], 400);
 
         } catch (\Exception $e) {
