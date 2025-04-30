@@ -41,9 +41,10 @@ class ReservationController extends Controller
         }
 
         // check if this plate has an active reservation
-        $acitvePlateReservation = auth('api')->user()->reservations->where('is_active',1)->where('license_plate',$request->plate)->first();
+        $acitvePlateReservation = auth('api')->user()->reservations->where('is_active',1)->first();
+        // $acitvePlateReservation = auth('api')->user()->reservations->where('is_active',1)->where('license_plate',$request->plate)->first();
         if($acitvePlateReservation){
-            return response()->json(['error'=>'plate already has reservation'],422);
+            return response()->json(['error'=>'user already has reservation'],422);
         }
         // now check if there is available spots to reserve
         $activeReservations = Reservable_Spot::where('is_occupied',1)->count();
