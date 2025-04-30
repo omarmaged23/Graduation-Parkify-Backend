@@ -100,4 +100,11 @@ class ReservationController extends Controller
             return response()->json(['error'=>$exception->getMessage()],422);
         }
     }
+    public function getActiveReservation(){
+        $activeReservation = auth('api')->user()->activeReservation;
+        if(!$activeReservation){
+            return response()->json(['error'=> 'user has no active reservations'],422);
+        }
+        return response()->json(['success'=> $activeReservation],200);
+    }
 }

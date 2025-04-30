@@ -37,6 +37,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/user/logout', [UserAuthController::class, 'logout']);
     // Spot reservation
     Route::post('/user/reserveSpot',[ReservationController::class,'reserveSpot']);
+    Route::get('/user/getActiveReservation',[ReservationController::class,'getActiveReservation']);
     Route::post('/user/cancelReservation',[ReservationController::class,'cancelReservation']);
     Route::post('/user/deactivateReservationBlocker',[ReservationController::class,'deactivateReservationBlocker']);
     // Get separate logs

@@ -355,14 +355,13 @@ class SpotLogController extends Controller
             } else {
                 $guestPayment = (new PaymentController())->guestPayment($invoice, $currentLog->license_plate);
                 if ($guestPayment) {
-                    $qrPath = QrCode::format('png')
+                    $qrPath = QrCode::format('svg')
                         ->size(450)
                         ->margin(1)
-                        ->backend('gd')
                         ->errorCorrection('H')
                         ->generate($guestPayment);
 
-                    $s3Path = 'qrcodes/' . uniqid() . '.png';
+                    $s3Path = 'qrcodes/' . uniqid() . '.svg';
                     Storage::disk('filebase')->put($s3Path, $qrPath);
                     // $paymentUrl = Storage::disk('filebase')->url($s3Path);
                     $paymentUrl = Storage::disk('filebase')->temporaryUrl(
