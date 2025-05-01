@@ -25,22 +25,22 @@ class ParkifySeeder extends Seeder
     {
         // generate 4 users
         $user1 = User::create([
-            'name' =>'omar maged',
+            'name' => 'omar maged',
             'email' => 'omar@gmail.com',
             'password' => Hash::make('Omar*123'),
         ]);
         $user2 = User::create([
-            'name' =>'omar khaled',
+            'name' => 'omar khaled',
             'email' => 'omarkhaled@gmail.com',
             'password' => Hash::make('Omar*123'),
         ]);
         $user3 = User::create([
-            'name' =>'mohsen',
+            'name' => 'mohsen',
             'email' => 'mohsen@gmail.com',
             'password' => Hash::make('Omar*123'),
         ]);
         $user4 = User::create([
-            'name' =>'ali abdo',
+            'name' => 'ali abdo',
             'email' => 'abdo@gmail.com',
             'password' => Hash::make('password'),
         ]);
@@ -149,49 +149,104 @@ class ParkifySeeder extends Seeder
         // generate public spots
         Public_Spot::create([
             'spot_code' => 'P1x1',
-            'management_id'=> 1,
-            'location_id'=> 1,
+            'management_id' => 1,
+            'location_id' => 1,
         ]);
         Public_Spot::create([
             'spot_code' => 'P2x2',
-            'management_id'=> 1,
-            'location_id'=> 1,
+            'management_id' => 1,
+            'location_id' => 1,
         ]);
         Public_Spot::create([
             'spot_code' => 'P3x3',
-            'management_id'=> 1,
-            'location_id'=> 1,
+            'management_id' => 1,
+            'location_id' => 1,
         ]);
         Public_Spot::create([
             'spot_code' => 'P4x4',
-            'management_id'=> 1,
-            'location_id'=> 1,
+            'management_id' => 1,
+            'location_id' => 1,
         ]);
 
         // generate reservable spots
         Reservable_Spot::create([
             'spot_code' => 'R1x1',
-            'management_id'=> 1,
-            'location_id'=> 1,
+            'management_id' => 1,
+            'location_id' => 1,
         ]);
         Reservable_Spot::create([
             'spot_code' => 'R2x2',
-            'management_id'=> 1,
-            'location_id'=> 1,
+            'management_id' => 1,
+            'location_id' => 1,
         ]);
         Reservable_Spot::create([
             'spot_code' => 'R3x3',
-            'management_id'=> 1,
-            'location_id'=> 1,
+            'management_id' => 1,
+            'location_id' => 1,
         ]);
         Reservable_Spot::create([
             'spot_code' => 'R4x4',
-            'management_id'=> 1,
-            'location_id'=> 1,
+            'management_id' => 1,
+            'location_id' => 1,
+        ]);
+        Reservable_Spot::create([
+            'spot_code' => 'R5x5',
+            'management_id' => 1,
+            'location_id' => 1,
+        ]);
+        Reservable_Spot::create([
+            'spot_code' => 'R6x6',
+            'management_id' => 1,
+            'location_id' => 1,
+        ]);
+        Reservable_Spot::create([
+            'spot_code' => 'R7x7',
+            'management_id' => 1,
+            'location_id' => 1,
+        ]);
+        Reservable_Spot::create([
+            'spot_code' => 'R8x8',
+            'management_id' => 1,
+            'location_id' => 1,
+        ]);
+        Reservable_Spot::create([
+            'spot_code' => 'R9x9',
+            'management_id' => 1,
+            'location_id' => 1,
+        ]);
+        Reservable_Spot::create([
+            'spot_code' => 'R10x10',
+            'management_id' => 1,
+            'location_id' => 1,
+        ]);
+        Reservable_Spot::create([
+            'spot_code' => 'R11x11',
+            'management_id' => 1,
+            'location_id' => 1,
+        ]);
+        Reservable_Spot::create([
+            'spot_code' => 'R12x12',
+            'management_id' => 1,
+            'location_id' => 1,
+        ]);
+        Reservable_Spot::create([
+            'spot_code' => 'R13x13',
+            'management_id' => 1,
+            'location_id' => 1,
+        ]);
+        Reservable_Spot::create([
+            'spot_code' => 'R14x14',
+            'management_id' => 1,
+            'location_id' => 1,
+        ]);
+        Reservable_Spot::create([
+            'spot_code' => 'R15x15',
+            'management_id' => 1,
+            'location_id' => 1,
         ]);
         // generate spot logs with payed status
         Public_Spot_Log::create([
-            'license_plate' => 'ق ص س 4 3 1' ,
+            'license_plate' => 'ق ص س 4 3 1',
             'user_id' => 1,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -199,7 +254,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHour(),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ق ص س 4 3 1' ,
+            'license_plate' => 'ق ص س 4 3 1',
             'user_id' => 1,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -207,7 +262,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->subHours(1),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -215,7 +270,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -223,7 +278,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -231,7 +286,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -239,7 +294,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -247,7 +302,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -255,7 +310,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -263,7 +318,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -271,7 +326,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -279,7 +334,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -287,7 +342,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -295,7 +350,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -303,7 +358,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -311,7 +366,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -319,7 +374,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -327,7 +382,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -335,7 +390,7 @@ class ParkifySeeder extends Seeder
             'exited_at' => now()->addHours(2),
         ]);
         Public_Spot_Log::create([
-            'license_plate' => 'م م ع 4 3 1' ,
+            'license_plate' => 'م م ع 4 3 1',
             'user_id' => 3,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -345,7 +400,7 @@ class ParkifySeeder extends Seeder
         // generate reservablespot logs with payed status
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 1,
-            'license_plate' => 'ق ص س 4 3 1' ,
+            'license_plate' => 'ق ص س 4 3 1',
             'user_id' => 1,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -354,7 +409,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 2,
-            'license_plate' => 'ق ص س 4 3 1' ,
+            'license_plate' => 'ق ص س 4 3 1',
             'user_id' => 1,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -363,7 +418,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 3,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -372,7 +427,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 4,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -381,7 +436,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 1,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -390,7 +445,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 2,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -399,7 +454,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 3,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -408,7 +463,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 4,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -417,7 +472,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 1,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -426,7 +481,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 2,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -435,7 +490,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 3,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -444,7 +499,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 4,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -453,7 +508,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 1,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -462,7 +517,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 2,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -471,7 +526,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 3,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -480,7 +535,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 4,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -489,7 +544,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 1,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -498,7 +553,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 2,
-            'license_plate' => 'ي ي ي 1 1 1' ,
+            'license_plate' => 'ي ي ي 1 1 1',
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
@@ -507,7 +562,7 @@ class ParkifySeeder extends Seeder
         ]);
         Reservable_Spot_Log::create([
             'reservable_spot_id' => 3,
-            'license_plate' => 'م م ع 4 3 1' ,
+            'license_plate' => 'م م ع 4 3 1',
             'user_id' => 3,
             'invoice_price' => '231.4',
             'is_payed' => 1,

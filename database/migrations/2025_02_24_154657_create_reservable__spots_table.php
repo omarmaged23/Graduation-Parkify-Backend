@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('reservable__spots', function (Blueprint $table) {
             $table->id();
             $table->string('spot_code')->unique();
-            $table->boolean('is_occupied')->default(false);
+            $table->boolean('is_occupied')->default(0);
             $table->foreignId('management_id')->constrained('spot__management')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('location_id')->constrained('locations')->cascadeOnDelete()->cascadeOnUpdate();
             $table->timestamps();

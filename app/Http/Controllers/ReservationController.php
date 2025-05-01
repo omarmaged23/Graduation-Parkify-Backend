@@ -84,9 +84,15 @@ class ReservationController extends Controller
         if(!$reservation){
             return response()->json(['error'=>'reservation not found'],422);
         }
-        $status = $reservation->delete();
-        if (!$status){
-            return response()->json(['error'=>'cancellation failed'],422);
+        try {
+            DB::transaction(function () use ($request,$reservation){
+                $reservation->reservableSpot()->update([
+                    'is_occupied' => 0
+                ]);
+                $reservation->delete();
+            });
+        } catch (\Exception $e){
+            return response()->json(['error'=>'cancellation failed','message' => $e->getMessage()],422);
         }
         return response()->json(['success'=>'reservation cancelled successfully'],200);
     }
