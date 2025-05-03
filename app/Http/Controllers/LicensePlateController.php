@@ -7,16 +7,19 @@ use Illuminate\Http\Request;
 
 class LicensePlateController extends Controller
 {
-    public function getUserPlates(){
-        $plates = License_Plate::where('user_id',auth('api')->user()->id)->select('id','plate')->get();
-        if(!$plates){
-            return response()->json(['error'=>'no plates found'],422);
+    public function getUserPlates()
+    {
+        $plates = License_Plate::where('user_id', auth('api')->user()->id)->select('id', 'plate')->get();
+        if (!$plates) {
+            return response()->json(['error' => 'no plates found'], 422);
         }
-        return response()->json(['success'=>$plates],200);
+        return response()->json(['success' => $plates], 200);
     }
-    public function addLicensePlate(Request $request){
+
+    public function addLicensePlate(Request $request)
+    {
         $request->validate([
-            'plate' => ['required','string','unique:license__plates,plate'],
+            'plate' => ['required', 'string', 'unique:license__plates,plate'],
         ]);
         $status = auth('api')->user()->licensePlates()->create([
             'plate' => $request->plate
@@ -27,11 +30,15 @@ class LicensePlateController extends Controller
         return response()->json(['success' => 'License Plate added successfully.'], 200);
     }
 
-    public function deleteLicensePlate(Request $request){
+    public function deleteLicensePlate(Request $request)
+    {
         $request->validate([
-            'id' => ['required','integer','exists:license__plates,id'],
+            'id' => ['required', 'integer', 'exists:license__plates,id'],
         ]);
-        $plate = License_Plate::where([['id',$request->id],['user_id'=>auth('api')->user()->id]])->first();
+        $plate = License_Plate::where([
+            ['id', $request->id],
+            ['user_id' , auth('api')->user()->id]
+        ])->first();
         if (!$plate) {
             return response()->json(['error' => 'Plate not found'], 422);
         }
