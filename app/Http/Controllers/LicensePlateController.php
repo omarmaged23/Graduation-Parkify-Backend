@@ -31,8 +31,12 @@ class LicensePlateController extends Controller
         $request->validate([
             'id' => ['required','integer','exists:license__plates,id'],
         ]);
-        $plate = License_Plate::find($request->id)->first()->delete();
+        $plate = License_Plate::where([['id',$request->id],['user_id'=>auth('api')->user()->id]])->first();
         if (!$plate) {
+            return response()->json(['error' => 'Plate not found'], 422);
+        }
+        $status = $plate->delete();
+        if (!$status) {
             return response()->json(['error' => 'Something went wrong deleting the plate'], 422);
         }
         return response()->json(['success' => 'License Plate deleted successfully.'], 200);
