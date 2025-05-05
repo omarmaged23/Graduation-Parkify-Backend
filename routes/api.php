@@ -50,6 +50,8 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/initiatePayment',[\App\Http\Controllers\PaymentController::class,'initiatePayment']);
     // Get user transaction history
     Route::get('/user/getTransactionHistory',[userDataController::class,'getTransactionHistory']);
+    // Get Points And Balance
+    Route::get('/user/getPointsAndBalance',[userDataController::class,'getPointsAndBalance']);
 });
 Route::middleware('auth:admin')->group(function () {
     // Logout

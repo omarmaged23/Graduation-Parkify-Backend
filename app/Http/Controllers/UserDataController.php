@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\User_Data;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -56,5 +57,14 @@ class UserDataController extends Controller
             return response()->json(['error' => 'User has no transaction history']);
         }
         return response()->json(['success' => $billings]);
+    }
+
+    public function getPointsAndBalance(Request $request)
+    {
+        $balance = User_Data::select(['balance','points'])->where('user_id',$request->user()->id);
+        if (!$balance) {
+            return response()->json(['userData' => null]);
+        }
+        return response()->json(['userData' => $balance]);
     }
 }
