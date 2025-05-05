@@ -9,6 +9,7 @@ use App\Models\License_Plate;
 use App\Models\Mqtt_Spot_Log;
 use App\Models\Public_Spot;
 use App\Models\Public_Spot_Log;
+use App\Models\Reservable_Spot;
 use App\Models\Reservable_Spot_Log;
 use App\Models\Spot_Management;
 use App\Models\User_Gift;
@@ -220,8 +221,9 @@ class SpotLogController extends Controller
 
         $count = Mqtt_Spot_Log::LocationCount($location);
         $publicSpots = Public_Spot::count();
+        $reservableSpots = Reservable_Spot::where(['is_occupied','0'],['location_id','1'])->count();
         // Publish to MQTT
-        $this->mqttService->publish('garage/available_spots', $publicSpots - $count);
+        $this->mqttService->publish('garage/available_spots', $publicSpots - $count.' '.$reservableSpots);
     }
 
     /**
