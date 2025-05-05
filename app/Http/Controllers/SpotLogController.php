@@ -221,7 +221,7 @@ class SpotLogController extends Controller
 
         $count = Mqtt_Spot_Log::LocationCount($location);
         $publicSpots = Public_Spot::count();
-        $reservableSpots = Reservable_Spot::where(['is_occupied','0'],['location_id','1'])->count();
+        $reservableSpots = Reservable_Spot::where(['is_occupied',0],['location_id',1])->count();
         // Publish to MQTT
         $this->mqttService->publish('garage/available_spots', $publicSpots - $count.' '.$reservableSpots);
     }
