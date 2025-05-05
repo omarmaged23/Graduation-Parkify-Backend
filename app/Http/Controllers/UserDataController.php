@@ -61,7 +61,7 @@ class UserDataController extends Controller
 
     public function getPointsAndBalance(Request $request)
     {
-        $balance = User_Data::select(['balance','points'])->where('user_id',$request->user()->id);
+        $balance = User_Data::select(['balance','points'])->where('user_id',$request->user()->id)->first();
         if (!$balance) {
             return response()->json(['userData' => null]);
         }
