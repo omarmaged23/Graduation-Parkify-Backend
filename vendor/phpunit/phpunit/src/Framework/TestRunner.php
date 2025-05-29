@@ -37,6 +37,7 @@ use PHPUnit\Util\PHP\AbstractPhpProcess;
 use ReflectionClass;
 use SebastianBergmann\CodeCoverage\Exception as OriginalCodeCoverageException;
 use SebastianBergmann\CodeCoverage\InvalidArgumentException;
+use SebastianBergmann\CodeCoverage\StaticAnalysisCacheNotConfiguredException;
 use SebastianBergmann\CodeCoverage\UnintentionallyCoveredCodeException;
 use SebastianBergmann\Invoker\Invoker;
 use SebastianBergmann\Invoker\TimeoutException;
@@ -254,6 +255,7 @@ final class TestRunner
      * @throws MoreThanOneDataSetFromDataProviderException
      * @throws NoPreviousThrowableException
      * @throws ProcessIsolationException
+     * @throws StaticAnalysisCacheNotConfiguredException
      */
     public function runInSeparateProcess(TestCase $test, bool $runEntireClass, bool $preserveGlobalState): void
     {

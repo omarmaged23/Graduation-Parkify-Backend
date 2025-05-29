@@ -58,6 +58,11 @@ final class ResultPrinter
         }
     }
 
+    public function flush(): void
+    {
+        $this->printer->flush();
+    }
+
     /**
      * @psalm-param string $prettifiedClassName
      */

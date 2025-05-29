@@ -9,6 +9,7 @@
         "aws/aws-sdk-php": "^3.342",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.10",
+        "laravel/octane": "^2.9",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
         "league/flysystem-aws-s3-v3": "^3.29",
@@ -22,7 +23,8 @@
         "laravel/sail": "^1.18",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^7.0",
-        "phpunit/phpunit": "^10.1",
+        "pestphp/pest": "^2.36",
+        "pestphp/pest-plugin-stressless": "^2.2",
         "spatie/laravel-ignition": "^2.0"
     },
     "autoload": {

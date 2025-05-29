@@ -63,12 +63,11 @@ final class MigrationBuilder
         '10.0' => [
             MoveCoverageDirectoriesToSource::class,
         ],
-
-        '10.4' => [
-            RemoveBeStrictAboutTodoAnnotatedTestsAttribute::class,
-        ],
     ];
 
+    /**
+     * @throws MigrationBuilderException
+     */
     public function build(string $fromVersion): array
     {
         $stack = [new UpdateSchemaLocation];

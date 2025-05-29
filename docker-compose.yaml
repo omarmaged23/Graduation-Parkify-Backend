@@ -1,0 +1,50 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/app
+      - /app/vendor
+      - /app/node_modules
+    env_file:
+      - .env
+    environment:
+      # Override only Docker-specific settings
+      - DB_HOST=mysql
+      - REDIS_HOST=redis
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - laravel
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3307:3306"  # Changed from 3306:3306 to avoid conflict
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-laravel}
+      MYSQL_USER: ${DB_USERNAME:-laravel}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-password}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - laravel
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - laravel
+
+volumes:
+  mysql_data:
+
+networks:
+  laravel:
+    driver: bridge

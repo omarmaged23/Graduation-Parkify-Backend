@@ -1,1 +1,4 @@
 .env
+**/caddy
+frankenphp
+frankenphp-worker.php
