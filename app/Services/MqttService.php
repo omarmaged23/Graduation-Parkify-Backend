@@ -66,4 +66,26 @@ class MqttService
             Log::error("MQTT Publish Error: " . $e->getMessage());
         }
     }
+    public static function subscribe($topic, callable $callback)
+    {
+        try {
+            $mqtt = self::getConnection();
+
+            Log::info("MQTT: Subscribing to topic: $topic");
+
+            $mqtt->subscribe($topic, function ($topic, $message) use ($callback) {
+                Log::info("MQTT: Received message on topic '$topic': $message");
+                call_user_func($callback, $topic, $message);
+            }, 0);
+
+            Log::info("MQTT: Successfully subscribed to $topic");
+
+            // Keep listening forever
+            $mqtt->loop(true);
+
+        } catch (\Exception $e) {
+            Log::error("MQTT Subscribe Error: " . $e->getMessage());
+            throw $e;
+        }
+    }
 }

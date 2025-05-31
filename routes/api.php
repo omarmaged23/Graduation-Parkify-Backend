@@ -92,7 +92,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/getSpotDetails', [\App\Http\Controllers\Admin\SpotManagementController::class, 'getSpotDetails']);
     Route::get('/getPointsPerHour', [\App\Http\Controllers\Admin\SpotManagementController::class, 'getPointsPerHour']);
     Route::get('/getUserWithLogs/{id}',[\App\Http\Controllers\Admin\ManageUserController::class, 'getUserWithLogs']);
+    Route::get('/getAllLocations',[\App\Http\Controllers\Admin\LocationController::class, 'getAllLocations']);
 
 });
-Route::post('/parkCar',[\App\Http\Controllers\SpotLogController::class,'parkCar']);
-Route::post('/exitParking',[\App\Http\Controllers\SpotLogController::class,'exitParking']);
+Route::post('/parkCar/{location}',[\App\Http\Controllers\SpotLogController::class,'parkCar']);
+Route::post('/exitParking/{location}',[\App\Http\Controllers\SpotLogController::class,'exitParking']);

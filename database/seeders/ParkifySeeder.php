@@ -250,6 +250,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 1,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now(),
             'exited_at' => now()->addHour(),
         ]);
@@ -258,6 +259,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 1,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->subMinutes(120),
             'exited_at' => now()->subHours(1),
         ]);
@@ -266,6 +268,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(15),
             'exited_at' => now()->addHours(2),
         ]);
@@ -274,6 +277,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(16),
             'exited_at' => now()->addHours(2),
         ]);
@@ -282,6 +286,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(17),
             'exited_at' => now()->addHours(2),
         ]);
@@ -290,6 +295,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(18),
             'exited_at' => now()->addHours(2),
         ]);
@@ -298,6 +304,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(19),
             'exited_at' => now()->addHours(2),
         ]);
@@ -306,6 +313,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(20),
             'exited_at' => now()->addHours(2),
         ]);
@@ -314,6 +322,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(21),
             'exited_at' => now()->addHours(2),
         ]);
@@ -322,6 +331,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(22),
             'exited_at' => now()->addHours(2),
         ]);
@@ -330,6 +340,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(23),
             'exited_at' => now()->addHours(2),
         ]);
@@ -338,6 +349,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(24),
             'exited_at' => now()->addHours(2),
         ]);
@@ -346,6 +358,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(25),
             'exited_at' => now()->addHours(2),
         ]);
@@ -354,6 +367,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(26),
             'exited_at' => now()->addHours(2),
         ]);
@@ -362,6 +376,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(27),
             'exited_at' => now()->addHours(2),
         ]);
@@ -370,6 +385,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(28),
             'exited_at' => now()->addHours(2),
         ]);
@@ -378,6 +394,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(29),
             'exited_at' => now()->addHours(2),
         ]);
@@ -386,6 +403,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 2,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(30),
             'exited_at' => now()->addHours(2),
         ]);
@@ -394,6 +412,7 @@ class ParkifySeeder extends Seeder
             'user_id' => 3,
             'invoice_price' => '231.4',
             'is_payed' => 1,
+            'location_id' => 1,
             'entered_at' => now()->addMinutes(31),
             'exited_at' => now()->addHours(3),
         ]);

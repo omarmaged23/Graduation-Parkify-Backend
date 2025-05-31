@@ -72,4 +72,13 @@ class LocationController extends Controller
         }
         return response()->json(['success' => 'Location deleted successfully'], 200);
     }
+
+    public function getAllLocations()
+    {
+        $locations = Location::all();
+        if(!$locations){
+            return response()->json(['error'=>"no locations found."],422);
+        }
+        return response()->json(['success'=>$locations],200);
+    }
 }

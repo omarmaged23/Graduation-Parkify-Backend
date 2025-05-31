@@ -10,8 +10,8 @@ class Mqtt_Spot_Log extends Model
     use HasFactory;
     protected $table = 'mqtt_spot_logs';
     protected $guarded = [];
-    public function scopeLocationCount($query, $location)
+    public function scopeLocationCount($query, $type ,$location)
     {
-        return $query->where('location', $location)->count();
+        return $query->where([['type','=',$type],['location','=',$location]])->count();
     }
 }
