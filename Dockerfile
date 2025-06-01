@@ -43,6 +43,9 @@ RUN php artisan view:cache || true
 RUN mkdir -p /var/log/supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Copy environment variables to make them available to supervisor
+COPY .env /app/.env
+
 # Set proper permissions
 RUN chown -R www-data:www-data /app \
     && chmod -R 755 /app/storage /app/bootstrap/cache
