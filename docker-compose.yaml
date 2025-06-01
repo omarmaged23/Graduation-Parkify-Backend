@@ -42,6 +42,16 @@ services:
     networks:
       - laravel
 
+  # MQTT subscriber - runs independently
+  mqtt-listener:
+    build: .
+    volumes:
+      - .:/app
+    command: php artisan mqtt:subscribe "garage/spots/request_init"
+    restart: unless-stopped
+    depends_on:
+      - app
+
 volumes:
   mysql_data:
 

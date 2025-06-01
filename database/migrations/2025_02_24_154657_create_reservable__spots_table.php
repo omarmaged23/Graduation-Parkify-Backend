@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('spot_code')->unique();
             $table->boolean('is_occupied')->default(0);
+            $table->boolean('is_active')->default(true);
             $table->foreignId('management_id')->constrained('spot__management')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignId('location_id')->constrained('locations')->cascadeOnDelete()->cascadeOnUpdate();
             $table->timestamps();

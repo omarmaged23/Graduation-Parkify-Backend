@@ -12,9 +12,11 @@ class MqttService
     protected static ?string $username;
     protected static ?string $password;
     protected static string $clientId;
+    protected static string $clientSubsctiberId;
     protected static bool $useTls;
     protected static ?ConnectionSettings $connectionSettings = null;
     protected static ?MqttClient $mqttClient = null;
+    protected static ?MqttClient $mqttSubscriber = null;
 
     private static function init()
     {
@@ -23,6 +25,7 @@ class MqttService
         self::$username = env('MQTT_USERNAME', null);
         self::$password = env('MQTT_PASSWORD', null);
         self::$clientId = env('MQTT_CLIENT_ID', 'default-client-id');
+        self::$clientSubsctiberId = env('MQTT_CLIENT_SUBSCRIBER_ID', 'default-subscriber-id');
         self::$useTls   = env('MQTT_TLS', true);
 
         self::$connectionSettings = (new ConnectionSettings())
@@ -32,33 +35,38 @@ class MqttService
             ->setUseTls(self::$useTls);
 
         self::$mqttClient = new MqttClient(self::$server, self::$port, self::$clientId);
+        self::$mqttSubscriber = new MqttClient(self::$server, self::$port, self::$clientSubsctiberId);
 
         Log::info("MQTT: Initialized with " . self::$server . ':' . self::$port);
     }
 
-    private static function getConnection()
+    private static function getConnection($publisher=true)
     {
         if (self::$connectionSettings === null) {
             self::init();
         }
 
-        if (!self::$mqttClient->isConnected()) {
+        if (!self::$mqttClient->isConnected() && !self::$mqttSubscriber->isConnected()) {
             self::$mqttClient->connect(self::$connectionSettings,true);
+            self::$mqttSubscriber->connect(self::$connectionSettings,true);
         }
         $server = self::$server;
         $port = self::$port;
 
         Log::info("MQTT: Connected to $server:$port...");
 
-        return self::$mqttClient;
+        if($publisher){
+            return self::$mqttClient;
+        }
+            return self::$mqttSubscriber;
     }
 
-    public static function publish($topic, $message)
+    public static function publish($topic, $message ,$retain = true)
     {
         try {
             $mqtt = self::getConnection();
 
-            $mqtt->publish($topic, $message, 0,true);
+            $mqtt->publish($topic, $message, 0,$retain);
 //            $mqtt->disconnect();
 
             Log::info("MQTT: Message published successfully!");
@@ -69,7 +77,7 @@ class MqttService
     public static function subscribe($topic, callable $callback)
     {
         try {
-            $mqtt = self::getConnection();
+            $mqtt = self::getConnection(false);
 
             Log::info("MQTT: Subscribing to topic: $topic");
 

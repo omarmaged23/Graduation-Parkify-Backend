@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Location;
 use App\Models\Reservable_Spot;
+use App\Services\MqttService;
 use Illuminate\Http\Request;
 
 class ReservableSpotController extends Controller
@@ -22,7 +24,7 @@ class ReservableSpotController extends Controller
             'management_id' => ['required','exists:spot__management,id'],
             'location_id' => ['required','exists:locations,id'],
         ]);
-
+        $location = Location::find($request->location_id)->name;
         $status = Reservable_Spot::create([
             'spot_code' => $request->spot_code,
             'management_id' => $request->management_id,
@@ -30,6 +32,12 @@ class ReservableSpotController extends Controller
         ]);
 
         if($status){
+            $spot = [
+                'reservable' => [
+                    $status->spot_code
+                ]
+            ];
+            (new MqttService())->publish(sprintf('garage/%s/spots/add',$location),json_encode($spot),false);
             return response()->json(['success'=>"Successfully added new reservable spot."],200);
         }
 
@@ -63,8 +71,15 @@ class ReservableSpotController extends Controller
         if(!$spot){
             return response()->json(['error'=>"No reservable spot found."],422);
         }
+        $location = Location::find($spot->location_id)->name;
+        $deletedSpot = [
+            'reservable' => [
+                'spot_code' => $spot->spot_code
+            ]
+        ];
         $status = $spot->delete();
         if($status){
+            (new MqttService())->publish(sprintf('garage/%s/spots/delete',$location),json_encode($deletedSpot),false);
             return response()->json(['success'=>"Successfully deleted reservable spot."],200);
         }
         return response()->json(['error' => 'Something went wrong while deleting reservable spot.'],422);

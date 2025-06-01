@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Location;
 use App\Models\Public_Spot;
+use App\Services\MqttService;
 use Illuminate\Http\Request;
 
 class PublicSpotController extends Controller
@@ -21,7 +23,7 @@ class PublicSpotController extends Controller
             'management_id' => ['required','exists:spot__management,id'],
             'location_id' => ['required','exists:locations,id'],
         ]);
-
+        $location = Location::find($request->location_id)->name;
         $status = Public_Spot::create([
             'spot_code' => $request->spot_code,
             'management_id' => $request->management_id,
@@ -29,6 +31,12 @@ class PublicSpotController extends Controller
         ]);
 
         if($status){
+            $spot = [
+                'public' => [
+                    $status->spot_code
+                ]
+            ];
+            (new MqttService())->publish(sprintf('garage/%s/spots/add',$location),json_encode($spot),false);
             return response()->json(['success'=>"Successfully added new public spot."],200);
         }
 
@@ -62,8 +70,15 @@ class PublicSpotController extends Controller
         if(!$spot){
             return response()->json(['error'=>"No public spot found."],422);
         }
+        $location = Location::find($spot->location_id)->name;
+        $deletedSpot = [
+            'public' => [
+                'spot_code' => $spot->spot_code
+            ]
+        ];
         $status = $spot->delete();
         if($status){
+            (new MqttService())->publish(sprintf('garage/%s/spots/delete',$location),json_encode($deletedSpot),false);
             return response()->json(['success'=>"Successfully deleted public spot."],200);
         }
         return response()->json(['error' => 'Something went wrong while deleting public spot.'],422);

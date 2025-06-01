@@ -2,6 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Location;
+use App\Models\Public_Spot;
+use App\Models\Reservable_Spot;
 use App\Services\MqttService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -53,13 +56,10 @@ class MqttSubscribe extends Command
     {
         // Put your instant actions here
         try {
-            $data = json_decode($message, true);
-
-            // Example actions based on your topic
-            if ($topic === 'device/status') {
-                $this->handleDeviceStatus($data);
-            } elseif ($topic === 'sensor/data') {
-                $this->handleSensorData($data);
+            if ($topic === 'garage/spots/request_init') {
+                $this->handleResponse($message);
+            } else {
+                $this->triggerError($message);
             }
 
         } catch (\Exception $e) {
@@ -67,17 +67,25 @@ class MqttSubscribe extends Command
         }
     }
 
-    private function handleDeviceStatus($data)
+    private function handleResponse($locationName)
     {
         // Your device status logic
-        Log::info("Device status updated", $data);
-        // Example: Update database, send notification, etc.
+        $locationID = Location::where('name', $locationName)->pluck('id')->first();
+        $publicLocationSpots = Public_Spot::where([['location_id', $locationID],['is_active',1]])->select('spot_code')->get();
+        $reservableLocationSpots = Reservable_Spot::where([['location_id', $locationID],['is_active',1]])->select('spot_code')->get();
+        $result = [
+            'public' => $publicLocationSpots,
+            'reservable' => $reservableLocationSpots,
+        ];
+        $result = json_encode($result);
+        MqttService::publish(sprintf('garage/%s/spots/init',$locationName),$result);
+        Log::info("MQTT: Response Completed ");
     }
 
-    private function handleSensorData($data)
+    private function triggerError($data)
     {
         // Your sensor data logic
-        Log::info("Sensor data received", $data);
-        // Example: Check thresholds, store data, etc.
+        Log::error("Sensor error data received", $data);
+        MqttService::publish(sprintf('garage/%s/spots/init',$data),'server is not subscribed to this topic');
     }
 }
