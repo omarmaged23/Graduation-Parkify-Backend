@@ -1,6 +1,6 @@
 FROM dunglas/frankenphp:php8.3
 
-# Install system dependencies
+# Install system dependencies + supervisor
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     libjpeg62-turbo-dev \
     zip \
     unzip \
+    supervisor \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -33,15 +34,21 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 # Copy the rest of the application
 COPY . .
 
+# Cache Laravel config for better performance
+RUN php artisan config:cache || true
+RUN php artisan route:cache || true
+RUN php artisan view:cache || true
+
+# Create supervisor configuration
+RUN mkdir -p /var/log/supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 # Set proper permissions
 RUN chown -R www-data:www-data /app \
     && chmod -R 755 /app/storage /app/bootstrap/cache
 
-# Switch to non-root user
-USER www-data
-
-# Expose port 80
+# Use fixed port 80
 EXPOSE 80
 
-# Start FrankenPHP with Octane
-CMD ["php", "artisan", "octane:frankenphp", "--host=0.0.0.0", "--port=80"]
+# Start supervisor (which manages both processes)
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
