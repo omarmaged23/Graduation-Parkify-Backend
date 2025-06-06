@@ -2,3 +2,8 @@
 **/caddy
 frankenphp
 frankenphp-worker.php
+docker-compose.yaml.local
+Dockerfile.local
+supervisord.conf
+Dockerfile
+railway.json

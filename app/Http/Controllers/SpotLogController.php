@@ -26,25 +26,25 @@ class SpotLogController extends Controller
     use NotificationTrait;
 
     // MQTT Topic Templates (will be formatted with branch)
-    private const ENTRY_GATE = 'garage/%s/entry_gate';
-    private const EXIT_GATE = 'garage/%s/exit_gate';
-    private const ENTRY_DISPLAY = 'garage/%s/entry/display/message';
-    private const EXIT_DISPLAY = 'garage/%s/exit/display/message';
-    private const EXIT_QR = 'garage/%s/exit/display/qrcode';
-    private const AVAILABLE_SPOTS = 'garage/%s/available_spots';
+    private $ENTRY_GATE = 'garage/%s/entry_gate';
+    private $EXIT_GATE = 'garage/%s/exit_gate';
+    private $ENTRY_DISPLAY = 'garage/%s/entry/display/message';
+    private $EXIT_DISPLAY = 'garage/%s/exit/display/message';
+    private $EXIT_QR = 'garage/%s/exit/display/qrcode';
+    private $AVAILABLE_SPOTS = 'garage/%s/available_spots';
 
     // Spot Type Constants
-    private const PUBLIC_SPOT = 'Public Spot';
-    private const RESERVABLE_SPOT = 'Reservable Spot';
+    private $PUBLIC_SPOT = 'Public Spot';
+    private $RESERVABLE_SPOT = 'Reservable Spot';
 
     // MQTT Messages
-    private const WELCOME_MSG = 'Welcome to parkify garage :D';
-    private const GARAGE_FULL_MSG = "Garage is full.\nVisit us later.";
-    private const EARLY_ARRIVAL_MSG = 'User have active reservation but arrived earlier than expected, you can enter garage 15 minutes earlier the reservation or you are not authorized';
-    private const GUEST_LIMIT_MSG = "Guest limit reached.\nPlease register your car on our application.";
-    private const ENTER_BEFORE_CLOSE_MSG = "Please, enter garage before gate closes.";
-    private const NO_ENTRY_LOGS_MSG = 'Guest has no entry logs or plate is misread.';
-    private const ALREADY_PAID_MSG = 'User already paid for exit.';
+    private $WELCOME_MSG = 'Welcome to parkify garage :D';
+    private $GARAGE_FULL_MSG = "Garage is full.\nVisit us later.";
+    private $EARLY_ARRIVAL_MSG = 'User have active reservation but arrived earlier than expected, you can enter garage 15 minutes earlier the reservation or you are not authorized';
+    private $GUEST_LIMIT_MSG = "Guest limit reached.\nPlease register your car on our application.";
+    private $ENTER_BEFORE_CLOSE_MSG = "Please, enter garage before gate closes.";
+    private $NO_ENTRY_LOGS_MSG = 'Guest has no entry logs or plate is misread.';
+    private $ALREADY_PAID_MSG = 'User already paid for exit.';
 
     protected $mqttService;
     protected $entered_at;
@@ -104,8 +104,8 @@ class SpotLogController extends Controller
             if ($activeReservation && $user->activeReservationWithinLimit) {
                 return $this->parkInReservedSpot($activeReservation, $userPlate->plate, $user->id);
             } else if ($activeReservation) {
-                $this->mqttService->publish(sprintf(self::ENTRY_DISPLAY, $this->branch), self::EARLY_ARRIVAL_MSG);
-                return response()->json(['status' => 'error' , 'message' => self::EARLY_ARRIVAL_MSG]);
+                $this->mqttService->publish(sprintf($this->ENTRY_DISPLAY, $this->branch), $this->EARLY_ARRIVAL_MSG);
+                return response()->json(['status' => 'error' , 'message' => $this->EARLY_ARRIVAL_MSG]);
             } else {
                 return $this->parkInPublicSpot($userPlate->plate, $user->id);
             }
@@ -157,15 +157,15 @@ class SpotLogController extends Controller
     private function parkInReservedSpot($reservation, $plate,$user_id)
     {
         return DB::transaction(function () use ($reservation, $plate,$user_id) {
-            $this->checkOrCreateLog(Reservable_Spot_Log::class, $plate, self::RESERVABLE_SPOT, $this->entered_at,$user_id ,$reservation->reservable_spot_id);
-            return response()->json(['status' => 'success','message'=> self::WELCOME_MSG]);
+            $this->checkOrCreateLog(Reservable_Spot_Log::class, $plate, $this->RESERVABLE_SPOT, $this->entered_at,$user_id ,$reservation->reservable_spot_id);
+            return response()->json(['status' => 'success','message'=> $this->WELCOME_MSG]);
         });
     }
 
     private function checkPublicSpotAvailability()
     {
         $allSpots = Public_Spot::where('location_id', $this->branchID)->count();
-        $usedSpots = Mqtt_Spot_Log::LocationCount(self::PUBLIC_SPOT,$this->branch);
+        $usedSpots = Mqtt_Spot_Log::LocationCount($this->PUBLIC_SPOT,$this->branch);
         return $allSpots == $usedSpots;
     }
 
@@ -176,8 +176,8 @@ class SpotLogController extends Controller
                 $this->handleFullGarage();
                 return response()->json(['error'=>'Not enough spots'],422);
             }
-            $this->checkOrCreateLog(Public_Spot_Log::class, $plate, self::PUBLIC_SPOT, $this->entered_at,$user_id);
-            return response()->json(['status' => 'success','message'=> self::WELCOME_MSG]);
+            $this->checkOrCreateLog(Public_Spot_Log::class, $plate, $this->PUBLIC_SPOT, $this->entered_at,$user_id);
+            return response()->json(['status' => 'success','message'=> $this->WELCOME_MSG]);
         });
     }
 
@@ -187,7 +187,7 @@ class SpotLogController extends Controller
 
             if ($this->checkPublicSpotAvailability()) {
                 $this->handleFullGarage();
-                return  response()->json(['status' => 'full','message'=> self::GARAGE_FULL_MSG]);
+                return  response()->json(['status' => 'full','message'=> $this->GARAGE_FULL_MSG]);
             }
 
             $guestPlate = Guest::where('license_plate', $plate)->first();
@@ -212,15 +212,15 @@ class SpotLogController extends Controller
     {
         return DB::transaction(function () use ($guestPlate) {
             if (Mqtt_Spot_Log::where([['license_plate', '=' ,$guestPlate->license_plate],['location','=',$this->branch]])->exists()) {
-                $this->mqttService->publish(sprintf(self::ENTRY_GATE, $this->branch), 'open');
-                $this->mqttService->publish(sprintf(self::ENTRY_DISPLAY, $this->branch), self::ENTER_BEFORE_CLOSE_MSG);
-                return  response()->json(data: ['status' => 'success','message'=> self::ENTER_BEFORE_CLOSE_MSG]);
+                $this->mqttService->publish(sprintf($this->ENTRY_GATE, $this->branch), 'open');
+                $this->mqttService->publish(sprintf($this->ENTRY_DISPLAY, $this->branch), $this->ENTER_BEFORE_CLOSE_MSG);
+                return  response()->json(data: ['status' => 'success','message'=> $this->ENTER_BEFORE_CLOSE_MSG]);
             }
 
             if ($guestPlate->counter >= 3) {
-                $this->mqttService->publish(sprintf(self::ENTRY_GATE, $this->branch), 'limit_exceeded');
-                $this->mqttService->publish(sprintf(self::ENTRY_DISPLAY, $this->branch), self::GUEST_LIMIT_MSG);
-                return  response()->json(data: ['status' => 'limit_exceeded','message'=> self::GUEST_LIMIT_MSG]);
+                $this->mqttService->publish(sprintf($this->ENTRY_GATE, $this->branch), 'limit_exceeded');
+                $this->mqttService->publish(sprintf($this->ENTRY_DISPLAY, $this->branch), $this->GUEST_LIMIT_MSG);
+                return  response()->json(data: ['status' => 'limit_exceeded','message'=> $this->GUEST_LIMIT_MSG]);
             }
 
             $guestPlate->increment('counter');
@@ -231,22 +231,22 @@ class SpotLogController extends Controller
     private function logGuestParking($guestPlate)
     {
         return DB::transaction(function () use ($guestPlate) {
-            $this->checkOrCreateLog(Guest_Spot_Log::class, $guestPlate->license_plate, self::PUBLIC_SPOT, $this->entered_at,null);
-            return response()->json(['status' => 'success','message'=> self::WELCOME_MSG]);
+            $this->checkOrCreateLog(Guest_Spot_Log::class, $guestPlate->license_plate, $this->PUBLIC_SPOT, $this->entered_at,null);
+            return response()->json(['status' => 'success','message'=> $this->WELCOME_MSG]);
         });
     }
 
     // Reusable functions for common MQTT patterns
     private function handleFullGarage()
     {
-        $this->mqttService->publish(sprintf(self::ENTRY_GATE, $this->branch), 'full');
-        $this->mqttService->publish(sprintf(self::ENTRY_DISPLAY, $this->branch), self::GARAGE_FULL_MSG);
+        $this->mqttService->publish(sprintf($this->ENTRY_GATE, $this->branch), 'full');
+        $this->mqttService->publish(sprintf($this->ENTRY_DISPLAY, $this->branch), $this->GARAGE_FULL_MSG);
     }
 
     private function openEntryGateWithWelcome()
     {
-        $this->mqttService->publish(sprintf(self::ENTRY_GATE, $this->branch), 'open');
-        $this->mqttService->publish(sprintf(self::ENTRY_DISPLAY, $this->branch), self::WELCOME_MSG);
+        $this->mqttService->publish(sprintf($this->ENTRY_GATE, $this->branch), 'open');
+        $this->mqttService->publish(sprintf($this->ENTRY_DISPLAY, $this->branch), $this->WELCOME_MSG);
     }
 
     private function logAndPublish($licensePlate, $type, $log = false)
@@ -265,7 +265,7 @@ class SpotLogController extends Controller
         $publicSpots = Public_Spot::where('location_id', $this->branchID)->count();
         $reservableSpots = Reservable_Spot::where([['is_occupied',0],['location_id',$this->branchID]])->count();
         // Publish to MQTT
-        $this->mqttService->publish(sprintf(self::AVAILABLE_SPOTS, $this->branch), $publicSpots - $count.' '.$reservableSpots);
+        $this->mqttService->publish(sprintf($this->AVAILABLE_SPOTS, $this->branch), $publicSpots - $count.' '.$reservableSpots);
     }
 
     /**
@@ -309,8 +309,8 @@ class SpotLogController extends Controller
         return DB::transaction(function () use ($plate) {
             $guestPlate = Guest::where('license_plate', $plate)->first();
             if (!$guestPlate) {
-                $this->mqttService->publish(sprintf(self::EXIT_DISPLAY, $this->branch), self::NO_ENTRY_LOGS_MSG);
-                return response()->json(['status' => 'error','message'=> self::NO_ENTRY_LOGS_MSG]);
+                $this->mqttService->publish(sprintf($this->EXIT_DISPLAY, $this->branch), $this->NO_ENTRY_LOGS_MSG);
+                return response()->json(['status' => 'error','message'=> $this->NO_ENTRY_LOGS_MSG]);
             }
             return $this->processExit(null, Guest_Spot_Log::class, $plate, 'public', false);
         });
@@ -337,12 +337,12 @@ class SpotLogController extends Controller
                     ['exited_at', '>=', now()->subMinutes(10)]
                 ])->orderBy('exited_at', 'desc')->first();
                 if ($currentLog) {
-                    $this->mqttService->publish(sprintf(self::EXIT_GATE, $this->branch), 'open');
-                    $this->mqttService->publish(sprintf(self::EXIT_DISPLAY, $this->branch), self::ALREADY_PAID_MSG);
-                    return response()->json(['status' => 'success','message'=> self::ALREADY_PAID_MSG]);
+                    $this->mqttService->publish(sprintf($this->EXIT_GATE, $this->branch), 'open');
+                    $this->mqttService->publish(sprintf($this->EXIT_DISPLAY, $this->branch), $this->ALREADY_PAID_MSG);
+                    return response()->json(['status' => 'success','message'=> $this->ALREADY_PAID_MSG]);
                 }
-                $this->mqttService->publish(sprintf(self::EXIT_DISPLAY, $this->branch), self::NO_ENTRY_LOGS_MSG);
-                return response()->json(['status' => 'error','message'=> self::NO_ENTRY_LOGS_MSG]);
+                $this->mqttService->publish(sprintf($this->EXIT_DISPLAY, $this->branch), $this->NO_ENTRY_LOGS_MSG);
+                return response()->json(['status' => 'error','message'=> $this->NO_ENTRY_LOGS_MSG]);
             }
             if($spotType){
                 $entry = $currentLog->entered_at;
@@ -367,7 +367,7 @@ class SpotLogController extends Controller
                 $status = null;
                 $balance < $invoice ? $this->sendSms("You don't have enough balance to pay for spot. Your invoice is $invoice and your current balance is $balance.", $user->userData->phone) : $status = true;
                 if ($status == null){
-                    $this->mqttService->publish(sprintf(self::EXIT_DISPLAY, $this->branch), "Insufficient balance.\nMake sure you have $invoice on your account");
+                    $this->mqttService->publish(sprintf($this->EXIT_DISPLAY, $this->branch), "Insufficient balance.\nMake sure you have $invoice on your account");
                     return response()->json(['status' => 'error','message'=> "Insufficient balance.\nMake sure you have $invoice on your account"]);
                 }
                 // Code discount logic here
@@ -401,8 +401,8 @@ class SpotLogController extends Controller
                     ->orderBy('entered_at', 'desc')
                     ->first()
                     ?->delete();
-                $this->mqttService->publish(sprintf(self::EXIT_GATE, $this->branch), 'open');
-                $this->logAndPublish(null,self::PUBLIC_SPOT,false);
+                $this->mqttService->publish(sprintf($this->EXIT_GATE, $this->branch), 'open');
+                $this->logAndPublish(null,$this->PUBLIC_SPOT,false);
             } else {
                 $guestPayment = (new PaymentController())->guestPayment($invoice, $currentLog->license_plate, $this->branch);
                 if ($guestPayment) {
@@ -418,14 +418,14 @@ class SpotLogController extends Controller
                         $s3Path,
                         now()->addMinutes(60)
                     );
-                    $this->mqttService->publish(sprintf(self::EXIT_QR, $this->branch), $paymentUrl);
+                    $this->mqttService->publish(sprintf($this->EXIT_QR, $this->branch), $paymentUrl);
                     $data['qr_payment'] = $paymentUrl;
                     $currentLog->update($data);
                     return response()->json(['status' => 'pending','message'=> 'Guest payment qrcode generated successfully.' ,'payment_qr'=>$paymentUrl]);
                 }
             }
             $message = "Plate:$plate \nFees:$invoice \nGoodbye :)";
-            $this->mqttService->publish(sprintf(self::EXIT_DISPLAY, $this->branch),$message);
+            $this->mqttService->publish(sprintf($this->EXIT_DISPLAY, $this->branch),$message);
             return response()->json(['status' => 'success' , 'message' => $message]);
         });
     }

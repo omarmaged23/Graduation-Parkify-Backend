@@ -21,11 +21,12 @@ class PaymentController extends Controller
     use NotificationTrait;
 
     // MQTT Topic Templates (consistent with SpotLogController)
-    private const EXIT_GATE = 'garage/%s/exit_gate';
-    private const EXIT_DISPLAY = 'garage/%s/exit/display/message';
-    private const EXIT_QR = 'garage/%s/exit/display/qrcode';
-    private const AVAILABLE_SPOTS = 'garage/%s/available_spots';
-    private const PUBLIC_SPOT = 'Public Spot';
+    private $EXIT_GATE = 'garage/%s/exit_gate';
+    private $EXIT_DISPLAY = 'garage/%s/exit/display/message';
+    private $EXIT_QR = 'garage/%s/exit/display/qrcode';
+    private $AVAILABLE_SPOTS = 'garage/%s/available_spots';
+    private $PUBLIC_SPOT = 'Public Spot';
+    private $mqttService;
 
     public function getPaymobToken()
     {
@@ -101,12 +102,7 @@ class PaymentController extends Controller
         }
     }
 
-    private function checkLocationExistence($branch)
-    {
-        return Location::where('name', $branch)->value('id');
-    }
-
-    public function guestPayment($amount, $plate, $branch = 'default')
+    public function guestPayment($amount, $plate, $branch)
     {
         if ($amount < 1) {
             $amount = 1;
@@ -283,6 +279,8 @@ class PaymentController extends Controller
     public function paymobCallback(Request $request)
     {
         try {
+//            Log::info('Paymob Callback Received', ['request_data' => $request->all()]);
+
             $paymobOrderId = $request->obj['order']['id'] ?? null;
             if (!$paymobOrderId) {
                 throw new \Exception('Paymob order ID not found in callback');
@@ -290,16 +288,6 @@ class PaymentController extends Controller
 
             $billing = Billing::where('paymob_order_id', $paymobOrderId)->firstOrFail();
             $chargeAmount = $billing->amount;
-
-            // Get branch context from billing record
-            $branch = $billing->branch ?? 'default';
-            $branchID = $this->checkLocationExistence($branch);
-
-            if (!$branchID) {
-                Log::error('Invalid branch in billing record', ['branch' => $branch, 'billing_id' => $billing->id]);
-                // Continue with default behavior but log the error
-            }
-
             // Check multiple success indicators
             $isSuccess = (
                 ($request->has('success') && $request->success === 'true') ||
@@ -326,21 +314,36 @@ class PaymentController extends Controller
             $billing->update($updateData);
 
             if ($isSuccess && $isCaptured) {
+//                Log::info('Payment successfully processed', [
+//                    'billing_id' => $billing->id,
+//                    'amount' => $billing->amount,
+//                    'transaction_id' => $billing->transaction_id
+//                ]);
                 if ($billing->user_id) {
-                    // Handle user balance recharge
                     $user = $billing->user;
                     $user->userData()->increment('balance', $chargeAmount);
                     $message = "Your account has been recharged with EGP " . $chargeAmount . ". Your new balance is EGP " . $user->userData->balance . ".";
                     $billing->update(['message' => $message]);
-                    // $this->sendSms($message, $user->userData->phone);
+//                    $this->sendSms($message, $user->userData->phone);
                 } else {
-                    // Handle guest payment - consistent with main code logic
-                    return $this->handleGuestPaymentCompletion($billing, $branch, $branchID);
+                    $plate = $billing->license_plate;
+                    $billingLocation = $billing->branch;
+                    $this->mqttService = new MqttService();
+                    $this->publishSpotAvailability($plate,$this->PUBLIC_SPOT,$billingLocation);
+                    Guest_Spot_Log::where('license_plate', $plate)->latest('id')->first()->update([
+                        'is_payed' => 1
+                    ]);
                 }
                 return response()->json(['success' => true, 'message' => 'Payment completed successfully']);
             }
 
-            $billing->update(['message' => 'Transaction failed, please make sure your card has enough credits or contact your bank.']);
+//            Log::warning('Payment not completed', [
+//                'billing_id' => $billing->id,
+//                'isSuccess' => $isSuccess,
+//                'isCaptured' => $isCaptured,
+//                'request_data' => $request->all()
+//            ]);
+            $billing->update(['message'=>'Transaction failed, please make sure your card has enough credits or contact your bank.']);
             return response()->json(['success' => false, 'message' => 'Payment not completed'], 400);
 
         } catch (\Exception $e) {
@@ -355,79 +358,17 @@ class PaymentController extends Controller
             ], 500);
         }
     }
-
-    private function handleGuestPaymentCompletion($billing, $branch, $branchID)
+    private function publishSpotAvailability($plate,$type,$branch)
     {
-        return DB::transaction(function () use ($billing, $branch, $branchID) {
-            $plate = $billing->license_plate;
-
-            // Find the correct unpaid guest log entry - consistent with main code
-            $currentLog = Guest_Spot_Log::where([
-                ['license_plate', $plate],
-                ['is_payed', 0]
-            ]);
-
-            // Add location filter if branchID exists
-            if ($branchID) {
-                $currentLog->where('location_id', $branchID);
-            }
-
-            $currentLog = $currentLog->whereDate('entered_at', Carbon::today())
-                ->orderBy('entered_at', 'desc')
-                ->first();
-
-            if (!$currentLog) {
-                throw new \Exception('No unpaid guest log found for plate: ' . $plate);
-            }
-
-            // Update the log entry
-            $currentLog->update([
-                'is_payed' => 1,
-                'exited_at' => now()
-            ]);
-
-            // Remove from MQTT tracking - consistent with main code
-            Mqtt_Spot_Log::where([
-                ['license_plate', $plate],
-                ['location', $branch]
-            ])->delete();
-
-            // Update available spots using consistent logic
-            $this->updateAvailableSpots($branch, $branchID);
-
-            // Open gate and clear display - using consistent MQTT topics
-            $mqttService = new MqttService();
-            $mqttService->publish(sprintf(self::EXIT_QR, $branch), '');
-            $mqttService->publish(sprintf(self::EXIT_GATE, $branch), 'open');
-
-            $message = "Plate: $plate\nPayment completed\nGoodbye :)";
-            $mqttService->publish(sprintf(self::EXIT_DISPLAY, $branch), $message);
-
-            return response()->json(['success' => true, 'message' => 'Guest payment completed successfully']);
-        });
-    }
-
-    private function updateAvailableSpots($branch, $branchID)
-    {
-        // Use the same counting logic as main code
-        $publicSpotCount = Mqtt_Spot_Log::LocationCount(self::PUBLIC_SPOT, $branch);
-
-        if ($branchID) {
-            $publicSpots = Public_Spot::where('location_id', $branchID)->count();
-            $reservableSpots = Reservable_Spot::where([
-                ['is_occupied', 0],
-                ['location_id', $branchID]
-            ])->count();
-        } else {
-            // Fallback for backward compatibility
-            $publicSpots = Public_Spot::count();
-            $reservableSpots = 0;
-        }
-
-        $mqttService = new MqttService();
-        $mqttService->publish(
-            sprintf(self::AVAILABLE_SPOTS, $branch),
-            ($publicSpots - $publicSpotCount) . ' ' . $reservableSpots
-        );
+        (new Mqtt_Spot_Log())->where([['license_plate',$plate],['location' , $branch]])->delete();
+        $branchId = Location::where('name',$branch)->value('id');
+        $count = Mqtt_Spot_Log::LocationCount($type,$branch);
+        $publicSpots = Public_Spot::where('location_id', $branchId)->count();
+        $reservableSpots = Reservable_Spot::where([['is_occupied',0],['location_id',$branchId]])->count();
+        // Publish to MQTT
+        ($this->mqttService)->publish(sprintf($this->AVAILABLE_SPOTS, $branch), $publicSpots - $count.' '.$reservableSpots);
+        ($this->mqttService)->publish(sprintf($this->EXIT_QR,$branch), '');
+        ($this->mqttService)->publish(sprintf($this->EXIT_GATE,$branch), 'open');
+        ($this->mqttService)->publish(sprintf($this->EXIT_DISPLAY,$branch), "Plate: $plate \nGoodbye :)");
     }
 }

@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/app
+      - /app/vendor
+      - /app/node_modules
+    env_file:
+      - .env
+    environment:
+      # Remove DB_HOST override - let it use .env value
+      - REDIS_HOST=redis
+    depends_on:
+      - redis  # Remove mysql dependency
+    networks:
+      - laravel
+
+  # Remove the entire mysql service block
+  # mysql:
+  #   image: mysql:8.0
+  #   ports:
+  #     - "3307:3306"
+  #   environment:
+  #     MYSQL_DATABASE: ${DB_DATABASE:-laravel}
+  #     MYSQL_USER: ${DB_USERNAME:-laravel}
+  #     MYSQL_PASSWORD: ${DB_PASSWORD:-password}
+  #     MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-password}
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   networks:
+  #     - laravel
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - laravel
+
+  # MQTT subscriber - runs independently
+  mqtt-listener:
+    build: .
+    volumes:
+      - .:/app
+    command: php artisan mqtt:subscribe "garage/spots/request_init"
+    restart: always
+    depends_on:
+      - app
+
+# Remove mysql_data volume since you're not using local MySQL
+# volumes:
+#   mysql_data:
+
+networks:
+  laravel:
+    driver: bridge

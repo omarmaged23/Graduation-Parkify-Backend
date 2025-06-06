@@ -157,16 +157,6 @@ class ParkifySeeder extends Seeder
             'management_id' => 1,
             'location_id' => 1,
         ]);
-        Public_Spot::create([
-            'spot_code' => 'P3x3',
-            'management_id' => 1,
-            'location_id' => 1,
-        ]);
-        Public_Spot::create([
-            'spot_code' => 'P4x4',
-            'management_id' => 1,
-            'location_id' => 1,
-        ]);
 
         // generate reservable spots
         Reservable_Spot::create([
@@ -179,70 +169,29 @@ class ParkifySeeder extends Seeder
             'management_id' => 1,
             'location_id' => 1,
         ]);
-        Reservable_Spot::create([
-            'spot_code' => 'R3x3',
+
+        // generate public spots
+        Public_Spot::create([
+            'spot_code' => 'PO1x1',
             'management_id' => 1,
-            'location_id' => 1,
+            'location_id' => 2,
+        ]);
+        Public_Spot::create([
+            'spot_code' => 'PO2x2',
+            'management_id' => 1,
+            'location_id' => 2,
+        ]);
+
+        // generate reservable spots
+        Reservable_Spot::create([
+            'spot_code' => 'RO1x1',
+            'management_id' => 1,
+            'location_id' => 2,
         ]);
         Reservable_Spot::create([
-            'spot_code' => 'R4x4',
+            'spot_code' => 'RO2x2',
             'management_id' => 1,
-            'location_id' => 1,
-        ]);
-        Reservable_Spot::create([
-            'spot_code' => 'R5x5',
-            'management_id' => 1,
-            'location_id' => 1,
-        ]);
-        Reservable_Spot::create([
-            'spot_code' => 'R6x6',
-            'management_id' => 1,
-            'location_id' => 1,
-        ]);
-        Reservable_Spot::create([
-            'spot_code' => 'R7x7',
-            'management_id' => 1,
-            'location_id' => 1,
-        ]);
-        Reservable_Spot::create([
-            'spot_code' => 'R8x8',
-            'management_id' => 1,
-            'location_id' => 1,
-        ]);
-        Reservable_Spot::create([
-            'spot_code' => 'R9x9',
-            'management_id' => 1,
-            'location_id' => 1,
-        ]);
-        Reservable_Spot::create([
-            'spot_code' => 'R10x10',
-            'management_id' => 1,
-            'location_id' => 1,
-        ]);
-        Reservable_Spot::create([
-            'spot_code' => 'R11x11',
-            'management_id' => 1,
-            'location_id' => 1,
-        ]);
-        Reservable_Spot::create([
-            'spot_code' => 'R12x12',
-            'management_id' => 1,
-            'location_id' => 1,
-        ]);
-        Reservable_Spot::create([
-            'spot_code' => 'R13x13',
-            'management_id' => 1,
-            'location_id' => 1,
-        ]);
-        Reservable_Spot::create([
-            'spot_code' => 'R14x14',
-            'management_id' => 1,
-            'location_id' => 1,
-        ]);
-        Reservable_Spot::create([
-            'spot_code' => 'R15x15',
-            'management_id' => 1,
-            'location_id' => 1,
+            'location_id' => 2,
         ]);
         // generate spot logs with payed status
         Public_Spot_Log::create([

@@ -28,6 +28,7 @@ class MqttSubscribe extends Command
     /**
      * Execute the console command.
      */
+    private $mqttService;
     public function handle()
     {
         $topic = $this->argument('topic');
@@ -43,10 +44,10 @@ class MqttSubscribe extends Command
             // Your action here - this runs instantly when message arrives
             $this->processMessage($receivedTopic, $message);
         };
-
+        $this->mqttService = new MqttService();
         try {
             // This keeps running forever and listens for messages
-            MQTTService::subscribe($topic, $callback);
+            ($this->mqttService)->subscribe($topic, $callback);
         } catch (\Exception $e) {
             Log::error("MQTT Error: " . $e->getMessage());
             $this->error("Connection failed: " . $e->getMessage());
@@ -78,7 +79,7 @@ class MqttSubscribe extends Command
             'reservable' => $reservableLocationSpots,
         ];
         $result = json_encode($result);
-        MqttService::publish(sprintf('garage/%s/spots/init',$locationName),$result);
+        ($this->mqttService)->publish(sprintf('garage/%s/spots/init',$locationName),$result,false);
         Log::info("MQTT: Response Completed ");
     }
 
@@ -86,6 +87,6 @@ class MqttSubscribe extends Command
     {
         // Your sensor data logic
         Log::error("Sensor error data received", $data);
-        MqttService::publish(sprintf('garage/%s/spots/init',$data),'server is not subscribed to this topic');
+        ($this->mqttService)->publish(sprintf('garage/%s/spots/init',$data),'server is not subscribed to this topic');
     }
 }

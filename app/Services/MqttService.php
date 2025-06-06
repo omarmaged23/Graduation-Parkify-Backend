@@ -14,11 +14,11 @@ class MqttService
     protected static string $clientId;
     protected static string $clientSubsctiberId;
     protected static bool $useTls;
-    protected static ?ConnectionSettings $connectionSettings = null;
+    protected ?ConnectionSettings $connectionSettings = null;
     protected static ?MqttClient $mqttClient = null;
     protected static ?MqttClient $mqttSubscriber = null;
 
-    private static function init()
+    private function init()
     {
         self::$server = env('MQTT_HOST', 'broker.hivemq.com');
         self::$port     = env('MQTT_PORT', 8883);
@@ -28,10 +28,10 @@ class MqttService
         self::$clientSubsctiberId = env('MQTT_CLIENT_SUBSCRIBER_ID', 'default-subscriber-id');
         self::$useTls   = env('MQTT_TLS', true);
 
-        self::$connectionSettings = (new ConnectionSettings())
+        $this->connectionSettings = (new ConnectionSettings())
             ->setUsername(self::$username)
             ->setPassword(self::$password)
-            ->setKeepAliveInterval(60)
+            ->setKeepAliveInterval(10)
             ->setUseTls(self::$useTls);
 
         self::$mqttClient = new MqttClient(self::$server, self::$port, self::$clientId);
@@ -40,15 +40,15 @@ class MqttService
         Log::info("MQTT: Initialized with " . self::$server . ':' . self::$port);
     }
 
-    private static function getConnection($publisher=true)
+    private function getConnection($publisher=true)
     {
-        if (self::$connectionSettings === null) {
+        if ($this->connectionSettings === null) {
             self::init();
         }
 
         if (!self::$mqttClient->isConnected() && !self::$mqttSubscriber->isConnected()) {
-            self::$mqttClient->connect(self::$connectionSettings,true);
-            self::$mqttSubscriber->connect(self::$connectionSettings,true);
+            self::$mqttClient->connect($this->connectionSettings,true);
+            self::$mqttSubscriber->connect($this->connectionSettings,true);
         }
         $server = self::$server;
         $port = self::$port;
@@ -61,10 +61,10 @@ class MqttService
             return self::$mqttSubscriber;
     }
 
-    public static function publish($topic, $message ,$retain = true)
+    public function publish($topic, $message ,$retain = true)
     {
         try {
-            $mqtt = self::getConnection();
+            $mqtt = $this->getConnection();
 
             $mqtt->publish($topic, $message, 0,$retain);
 //            $mqtt->disconnect();
@@ -74,10 +74,10 @@ class MqttService
             Log::error("MQTT Publish Error: " . $e->getMessage());
         }
     }
-    public static function subscribe($topic, callable $callback)
+    public function subscribe($topic, callable $callback)
     {
         try {
-            $mqtt = self::getConnection(false);
+            $mqtt = $this->getConnection(false);
 
             Log::info("MQTT: Subscribing to topic: $topic");
 

@@ -33,11 +33,10 @@ class ReservableSpotController extends Controller
 
         if($status){
             $spot = [
-                'reservable' => [
-                    $status->spot_code
-                ]
+                'spot_code' => $status->spot_code,
+                'type' => 'reservable'
             ];
-            (new MqttService())->publish(sprintf('garage/%s/spots/add',$location),json_encode($spot),false);
+            (new MqttService())->publish(sprintf('garage/%s/spots/add',$location),$spot,false);
             return response()->json(['success'=>"Successfully added new reservable spot."],200);
         }
 
@@ -72,14 +71,9 @@ class ReservableSpotController extends Controller
             return response()->json(['error'=>"No reservable spot found."],422);
         }
         $location = Location::find($spot->location_id)->name;
-        $deletedSpot = [
-            'reservable' => [
-                'spot_code' => $spot->spot_code
-            ]
-        ];
         $status = $spot->delete();
         if($status){
-            (new MqttService())->publish(sprintf('garage/%s/spots/delete',$location),json_encode($deletedSpot),false);
+            (new MqttService())->publish(sprintf('garage/%s/spots/delete',$location),$spot->spot_code,false);
             return response()->json(['success'=>"Successfully deleted reservable spot."],200);
         }
         return response()->json(['error' => 'Something went wrong while deleting reservable spot.'],422);

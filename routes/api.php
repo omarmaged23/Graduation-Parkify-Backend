@@ -97,3 +97,6 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 Route::post('/parkCar/{location}',[\App\Http\Controllers\SpotLogController::class,'parkCar']);
 Route::post('/exitParking/{location}',[\App\Http\Controllers\SpotLogController::class,'exitParking']);
+Route::get('/getParkedCars', function (){
+    return \App\Models\Mqtt_Spot_Log::all();
+});
