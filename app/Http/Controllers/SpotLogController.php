@@ -139,6 +139,10 @@ class SpotLogController extends Controller
                 'user_id' => $user_id,
 //                'location_id' => $this->branchID
             ];
+            if($type == $this->PUBLIC_SPOT){
+                $condition[] = ['location_id', '=', $this->branchID];
+                $data[] = ['location_id', '=', $this->branchID];
+            }
         }
         $log = $modelClass::where($condition)
             ->whereDate('entered_at', Carbon::today())->orderBy('entered_at', 'desc')->first();
