@@ -335,7 +335,7 @@ class SpotLogController extends Controller
                     ['is_payed', 1],
                     ['location_id', $this->branchID],
                     ['exited_at', '>=', now()->subMinutes(10)]
-                ])->orderBy('entered_at', 'desc')->first();
+                ])->orderBy('exited_at', 'desc')->first();
                 if ($currentLog) {
                     $this->mqttService->publish(sprintf($this->EXIT_GATE, $this->branch), 'open');
                     $this->mqttService->publish(sprintf($this->EXIT_DISPLAY, $this->branch), $this->ALREADY_PAID_MSG);
