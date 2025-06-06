@@ -15,6 +15,7 @@ class ReservationController extends Controller
         // validate fields are not empty and date is in right format
         $request->validate([
             'plate' => 'required',
+            'location_id' => 'required|exists:locations,id',
             'reserve_at' => 'required|date_format:Y-m-d H:i:s',
         ]);
         $reservableSpot = Spot_Management::where('type','reservable')->first();
@@ -47,7 +48,7 @@ class ReservationController extends Controller
             return response()->json(['error'=>'user already has reservation'],422);
         }
         // now check if there is available spots to reserve
-        $activeReservations = Reservable_Spot::where('is_occupied',1)->count();
+        $activeReservations = Reservable_Spot::where([['is_occupied',1],['location_id',$request->location_id]])->count();
         $reservableSpots = Reservable_Spot::count();
         if($activeReservations >= $reservableSpots){
             return response()->json(['error'=>'all spots are reserved'],422);
@@ -65,7 +66,7 @@ class ReservationController extends Controller
         // Otherwise deduct fees and confirm
         $transaction = DB::transaction(function () use ($request,$reservationFees,$reservationTimeStamp){
             $balance = auth('api')->user()->userData()->decrement('balance',$reservationFees);
-            $spot = Reservable_Spot::where('is_occupied',0)->first();
+            $spot = Reservable_Spot::where([['is_occupied',0],['location_id',$request->location_id]])->first();
             $reservation = $spot->reservations()->create([
                 'license_plate' => $request->plate,
                 'expected_arrival' => $request->reserve_at,
@@ -101,7 +102,7 @@ class ReservationController extends Controller
         try{
             $spot = auth('api')->user()->activeReservation->reservableSpot->spot_code;
             $mqtt = new MqttService();
-            $mqtt->publish('blocker/open',$spot);
+            $mqtt->publish(sprintf('garage/%s/spot/blocker/open',$request->location),$spot);
             return response()->json(['success'=>'blocker deactivated successfully'],200);
         } catch (\Exception $exception){
             return response()->json(['error'=>$exception->getMessage()],422);

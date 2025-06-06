@@ -101,7 +101,7 @@ class SpotLogController extends Controller
             $user = $userPlate->user;
             $activeReservation = $user->activeReservation;
 
-            if ($activeReservation && $user->activeReservationWithinLimit) {
+            if ($activeReservation && $activeReservation->reservableSpot->location_id  == $this->branchID && $user->activeReservationWithinLimit) {
                 return $this->parkInReservedSpot($activeReservation, $userPlate->plate, $user->id);
             } else if ($activeReservation) {
                 $this->mqttService->publish(sprintf($this->ENTRY_DISPLAY, $this->branch), $this->EARLY_ARRIVAL_MSG);
@@ -130,13 +130,13 @@ class SpotLogController extends Controller
                 ['license_plate', '=', $plate],
                 ['is_payed', '=', 0],
                 ['user_id', '=', $user_id],
-                ['location_id', '=', $this->branchID]
+//                ['location_id', '=', $this->branchID]
             ];
             $data = [
                 'license_plate' => $plate,
                 'entered_at' => $enteredAt,
                 'user_id' => $user_id,
-                'location_id' => $this->branchID
+//                'location_id' => $this->branchID
             ];
         }
         $log = $modelClass::where($condition)
