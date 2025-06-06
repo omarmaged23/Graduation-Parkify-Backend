@@ -323,19 +323,25 @@ class SpotLogController extends Controller
     private function processExit($user, $logModel, $plate, $spotType = null, $deductBalance = true)
     {
         return DB::transaction(function () use ($user, $logModel, $plate, $spotType, $deductBalance) {
-            $currentLog = $logModel::where([
+            $dataCondition = [
                 ['license_plate', $plate],
-                ['is_payed', 0],
-                ['location_id', $this->branchID]
-            ])->orderBy('entered_at', 'desc')->first();
+                ['is_payed', 0]
+            ];
+            if($spotType){
+                $dataCondition[] = ['location_id', $this->branchID];
+            }
+            $currentLog = $logModel::where($dataCondition)->orderBy('entered_at', 'desc')->first();
 
             if (!$currentLog) {
-                $currentLog = $logModel::where([
+                $dataCondition = [
                     ['license_plate', $plate],
                     ['is_payed', 1],
-                    ['location_id', $this->branchID],
                     ['exited_at', '>=', now()->subMinutes(10)]
-                ])->orderBy('exited_at', 'desc')->first();
+                ];
+                if($spotType){
+                    $dataCondition[] = ['location_id', $this->branchID];
+                }
+                $currentLog = $logModel::where($dataCondition)->orderBy('exited_at', 'desc')->first();
                 if ($currentLog) {
                     $this->mqttService->publish(sprintf($this->EXIT_GATE, $this->branch), 'open');
                     $this->mqttService->publish(sprintf($this->EXIT_DISPLAY, $this->branch), $this->ALREADY_PAID_MSG);
