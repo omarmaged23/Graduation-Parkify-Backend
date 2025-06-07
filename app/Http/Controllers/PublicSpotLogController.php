@@ -23,7 +23,7 @@ class PublicSpotLogController extends Controller
 
     public function logUsedPublicSpot(Request $request , $location){
         $request->validate([
-            'spot_code' => 'required|exists:public_spots,spot_code',
+            'spot_code' => 'required|exists:public__spots,spot_code',
         ]);
         $location = Location::select('id','name')->where('name',$location)->first();
         if(!$location){
