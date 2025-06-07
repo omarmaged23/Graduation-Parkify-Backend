@@ -217,13 +217,13 @@ class SpotLogController extends Controller
     {
         return DB::transaction(function () use ($guestPlate) {
             if (Mqtt_Spot_Log::where([['license_plate', '=' ,$guestPlate->license_plate],['location','=',$this->branch]])->exists()) {
-                $this->mqttService->publish(sprintf($this->ENTRY_GATE, $this->branch), 'open');
+                $this->mqttService->publish(sprintf($this->ENTRY_GATE, $this->branch), 'open',false);
                 $this->mqttService->publish(sprintf($this->ENTRY_DISPLAY, $this->branch), $this->ENTER_BEFORE_CLOSE_MSG);
                 return  response()->json(data: ['status' => 'success','message'=> $this->ENTER_BEFORE_CLOSE_MSG]);
             }
 
             if ($guestPlate->counter >= 3) {
-                $this->mqttService->publish(sprintf($this->ENTRY_GATE, $this->branch), 'limit_exceeded');
+                $this->mqttService->publish(sprintf($this->ENTRY_GATE, $this->branch), 'limit_exceeded',false);
                 $this->mqttService->publish(sprintf($this->ENTRY_DISPLAY, $this->branch), $this->GUEST_LIMIT_MSG);
                 return  response()->json(data: ['status' => 'limit_exceeded','message'=> $this->GUEST_LIMIT_MSG]);
             }
@@ -244,13 +244,13 @@ class SpotLogController extends Controller
     // Reusable functions for common MQTT patterns
     private function handleFullGarage()
     {
-        $this->mqttService->publish(sprintf($this->ENTRY_GATE, $this->branch), 'full');
+        $this->mqttService->publish(sprintf($this->ENTRY_GATE, $this->branch), 'full',false);
         $this->mqttService->publish(sprintf($this->ENTRY_DISPLAY, $this->branch), $this->GARAGE_FULL_MSG);
     }
 
     private function openEntryGateWithWelcome()
     {
-        $this->mqttService->publish(sprintf($this->ENTRY_GATE, $this->branch), 'open');
+        $this->mqttService->publish(sprintf($this->ENTRY_GATE, $this->branch), 'open',false);
         $this->mqttService->publish(sprintf($this->ENTRY_DISPLAY, $this->branch), $this->WELCOME_MSG);
     }
 
@@ -348,7 +348,7 @@ class SpotLogController extends Controller
                 }
                 $currentLog = $logModel::where($dataCondition)->orderBy('exited_at', 'desc')->first();
                 if ($currentLog) {
-                    $this->mqttService->publish(sprintf($this->EXIT_GATE, $this->branch), 'open');
+                    $this->mqttService->publish(sprintf($this->EXIT_GATE, $this->branch), 'open',false);
                     $this->mqttService->publish(sprintf($this->EXIT_DISPLAY, $this->branch), $this->ALREADY_PAID_MSG);
                     return response()->json(['status' => 'success','message'=> $this->ALREADY_PAID_MSG]);
                 }
@@ -412,7 +412,7 @@ class SpotLogController extends Controller
                     ->orderBy('entered_at', 'desc')
                     ->first()
                     ?->delete();
-                $this->mqttService->publish(sprintf($this->EXIT_GATE, $this->branch), 'open');
+                $this->mqttService->publish(sprintf($this->EXIT_GATE, $this->branch), 'open',false);
                 $this->logAndPublish(null,$this->PUBLIC_SPOT,false);
             } else {
                 $guestPayment = (new PaymentController())->guestPayment($invoice, $currentLog->license_plate, $this->branch);
