@@ -267,7 +267,7 @@ class SpotLogController extends Controller
             ]);
         }
 
-        $count = Mqtt_Spot_Log::LocationCount($type,$this->branch);
+        $count = Mqtt_Spot_Log::LocationCount($this->PUBLIC_SPOT,$this->branch);
         $publicSpots = Public_Spot::where('location_id', $this->branchID)->count();
         $reservableSpots = Reservable_Spot::where([['is_occupied',0],['location_id',$this->branchID]])->count();
         // Publish to MQTT
@@ -302,8 +302,7 @@ class SpotLogController extends Controller
         return DB::transaction(function () use ($userPlate) {
             $user = $userPlate->user;
             $activeReservation = $user->activeReservation;
-
-            if ($activeReservation) {
+            if ($activeReservation && $activeReservation->reservableSpot->location_id  == $this->branchID) {
                 return $this->processExit($user, Reservable_Spot_Log::class, $userPlate->plate );
             }
             return $this->processExit($user, Public_Spot_Log::class, $userPlate->plate, 'public');
