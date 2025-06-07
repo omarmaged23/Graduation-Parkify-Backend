@@ -421,7 +421,7 @@ class SpotLogController extends Controller
                     ];
                     $this->mqttService->publish($this->BLOCKER_CONTROL,json_encode($blockerMsg));
                 }
-                
+
                 $this->mqttService->publish(sprintf($this->EXIT_GATE, $this->branch), 'open',false);
                 $this->logAndPublish(null,$this->PUBLIC_SPOT,false);
             } else {

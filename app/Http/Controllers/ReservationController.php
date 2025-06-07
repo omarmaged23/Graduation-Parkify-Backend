@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Location;
 use App\Models\Reservable_Spot;
 use App\Models\Spot_Management;
 use App\Services\MqttService;
