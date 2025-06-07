@@ -8,6 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class Public_Spot_Used extends Model
 {
     use HasFactory;
-    protected $table = 'public_spot_used';
+    protected $table = 'public_spots_used';
     protected $guarded = [];
 }
