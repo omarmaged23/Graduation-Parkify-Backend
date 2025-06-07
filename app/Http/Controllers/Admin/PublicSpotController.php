@@ -35,7 +35,7 @@ class PublicSpotController extends Controller
                 'spot_code' => $status->spot_code,
                 'type' => 'public'
             ];
-            (new MqttService())->publish(sprintf('garage/%s/spots/add',$location),$spot,false);
+            (new MqttService())->publish(sprintf('garage/%s/spots/add',$location),json_encode($spot),false);
             return response()->json(['success'=>"Successfully added new public spot."],200);
         }
 

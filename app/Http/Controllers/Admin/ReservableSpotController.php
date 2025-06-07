@@ -36,7 +36,7 @@ class ReservableSpotController extends Controller
                 'spot_code' => $status->spot_code,
                 'type' => 'reservable'
             ];
-            (new MqttService())->publish(sprintf('garage/%s/spots/add',$location),$spot,false);
+            (new MqttService())->publish(sprintf('garage/%s/spots/add',$location),json_encode($spot),false);
             return response()->json(['success'=>"Successfully added new reservable spot."],200);
         }
 
