@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\UserDataController;
+use App\Services\MqttService;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -99,4 +100,14 @@ Route::post('/parkCar/{location}',[\App\Http\Controllers\SpotLogController::clas
 Route::post('/exitParking/{location}',[\App\Http\Controllers\SpotLogController::class,'exitParking']);
 Route::get('/getParkedCars', function (){
     return \App\Models\Mqtt_Spot_Log::all();
+});
+Route::post('/resetRetain', function(){
+    $mqttService = new MqttService();
+    $mqttService->publish('garage/banha/entry_gate','',true);
+    $mqttService->publish('garage/obour/entry_gate','',true);
+    $mqttService->publish('garage/banha/exit_gate','',true);
+    $mqttService->publish('garage/obour/exit_gate','',true);
+    $mqttService->publish('garage/banha/spots/init','',true);
+    $mqttService->publish('garage/obour/spots/init','',true);
+    return 'done';
 });

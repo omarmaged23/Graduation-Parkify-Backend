@@ -102,7 +102,11 @@ class ReservationController extends Controller
         try{
             $spot = auth('api')->user()->activeReservation->reservableSpot->spot_code;
             $mqtt = new MqttService();
-            $mqtt->publish(sprintf('garage/%s/spot/blocker/open',$request->location),$spot);
+            $msg = [
+                'spot_code' => $spot,
+                'status' => 'open',
+            ];
+            $mqtt->publish(sprintf('garage/%s/spot/blocker',$request->location),json_encode($msg));
             return response()->json(['success'=>'blocker deactivated successfully'],200);
         } catch (\Exception $exception){
             return response()->json(['error'=>$exception->getMessage()],422);

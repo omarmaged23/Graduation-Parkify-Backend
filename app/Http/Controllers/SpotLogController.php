@@ -32,6 +32,7 @@ class SpotLogController extends Controller
     private $EXIT_DISPLAY = 'garage/%s/exit/display/message';
     private $EXIT_QR = 'garage/%s/exit/display/qrcode';
     private $AVAILABLE_SPOTS = 'garage/%s/available_spots';
+    private $BLOCKER_CONTROL = 'garage/%s/spot/blocker';
 
     // Spot Type Constants
     private $PUBLIC_SPOT = 'Public Spot';
@@ -359,6 +360,7 @@ class SpotLogController extends Controller
                 $entry = $currentLog->entered_at;
             }else{
                 $entry = $user->activeReservation->expected_arrival;
+                $this->BLOCKER_CONTROL = sprintf($this->BLOCKER_CONTROL, $this->branch);
             }
             $parkingTime = round($entry->floatDiffInHours($this->exitTime), 2);
             $parkingPrice = Spot_Management::where('type', $spotType ?: 'reservable')->first();
@@ -390,7 +392,6 @@ class SpotLogController extends Controller
                     $data['invoice_price']=$invoice;
                 }
                 $userPoints = (int) round($parkingPrice->points_per_hour *  $parkingTime);
-
                 try {
                     DB::transaction(function () use ($currentLog,$user,$userGift,$data,$invoice,$spotType,$userPoints) {
                         $user->userData()->decrement('balance', $invoice);
@@ -412,6 +413,15 @@ class SpotLogController extends Controller
                     ->orderBy('entered_at', 'desc')
                     ->first()
                     ?->delete();
+
+                if(!$spotType){
+                    $blockerMsg = [
+                        'spot_code' => $user->activeReservation->reservableSpot->spot_code,
+                        'status' => 'close'
+                    ];
+                    $this->mqttService->publish($this->BLOCKER_CONTROL,json_encode($blockerMsg));
+                }
+                
                 $this->mqttService->publish(sprintf($this->EXIT_GATE, $this->branch), 'open',false);
                 $this->logAndPublish(null,$this->PUBLIC_SPOT,false);
             } else {
