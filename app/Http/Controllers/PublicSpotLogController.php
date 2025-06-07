@@ -32,7 +32,7 @@ class PublicSpotLogController extends Controller
 
         $log = Public_Spot_Used::create([
             'spot_code' => $request->spot_code,
-            'location' => $location->id
+            'location_id' => $location->id
         ]);
         if($log){
             return response()->json(['status' => 'success'], 200);
