@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Location;
+use App\Models\Mqtt_Spot_Log;
+use App\Models\Public_Spot;
 use App\Models\Reservable_Spot;
+use App\Models\Reservation;
 use App\Models\Spot_Management;
 use App\Services\MqttService;
 use Carbon\Carbon;
@@ -12,13 +15,28 @@ use Illuminate\Support\Facades\DB;
 
 class ReservationController extends Controller
 {
+    private $AVAILABLE_SPOTS = 'garage/%s/available_spots';
+    private $PUBLIC_SPOT = 'Public Spot';
+    private $RESERVABLE_SPOT = 'Reservable Spot';
+
+    private function updateAvailableSpots($location){
+        $count = Mqtt_Spot_Log::LocationCount($this->PUBLIC_SPOT,$location->name);
+        $publicSpots = Public_Spot::where('location_id', $location->id)->count();
+        $reservableSpots = Reservable_Spot::where([['is_occupied',0],['location_id',$location->id]])->count();
+        // Publish to MQTT
+        (new MqttService())->publish(sprintf($this->AVAILABLE_SPOTS, $location->name), $publicSpots - $count.' '.$reservableSpots);
+    }
     public function reserveSpot(Request $request){
         // validate fields are not empty and date is in right format
         $request->validate([
             'plate' => 'required',
-            'location_id' => 'required|exists:locations,id',
+//            'location_id' => 'required|exists:locations,id',
             'reserve_at' => 'required|date_format:Y-m-d H:i:s',
         ]);
+        $location = Location::find($request->location_id);
+        if(!$location){
+            return response()->json(['error' => 'Location not found'], 404);
+        }
         $reservableSpot = Spot_Management::where('type','reservable')->first();
         // reservation time >= now + 1 hour --- Proceed
         $reservationTimeStamp= Carbon::parse($request->reserve_at);
@@ -43,9 +61,9 @@ class ReservationController extends Controller
         }
 
         // check if this plate has an active reservation
-        $acitvePlateReservation = auth('api')->user()->reservations->where('is_active',1)->first();
-        // $acitvePlateReservation = auth('api')->user()->reservations->where('is_active',1)->where('license_plate',$request->plate)->first();
-        if($acitvePlateReservation){
+        $activePlateReservation = auth('api')->user()->reservations->where('is_active',1)->first();
+        // $activePlateReservation = auth('api')->user()->reservations->where('is_active',1)->where('license_plate',$request->plate)->first();
+        if($activePlateReservation){
             return response()->json(['error'=>'user already has reservation'],422);
         }
         // now check if there is available spots to reserve
@@ -65,7 +83,7 @@ class ReservationController extends Controller
             return response()->json(['error'=>'please add more balance to your account'],422);
         }
         // Otherwise deduct fees and confirm
-        $transaction = DB::transaction(function () use ($request,$reservationFees,$reservationTimeStamp){
+        $transaction = DB::transaction(function () use ($request,$reservationFees,$reservationTimeStamp,$location){
             $balance = auth('api')->user()->userData()->decrement('balance',$reservationFees);
             $spot = Reservable_Spot::where([['is_occupied',0],['location_id',$request->location_id]])->first();
             $reservation = $spot->reservations()->create([
@@ -77,6 +95,7 @@ class ReservationController extends Controller
             if(!$reservation | !$balance){
                 return response()->json(['error'=>'reservation not created, something went wrong'],422);
             }
+            $this->updateAvailableSpots($location);
             return response()->json(['success'=>$reservation,'spot'=>$spot,'reservation_time'=> $reservationTimeStamp->format('F j \a\t g A')],200);
         });
         return $transaction;
@@ -100,8 +119,16 @@ class ReservationController extends Controller
     }
     public function deactivateReservationBlocker(Request $request)
     {
+        $request->validate([
+            'location' => 'required|exists:locations,name',
+        ]);
         try{
-            $spot = auth('api')->user()->activeReservation->reservableSpot->spot_code;
+            $activeReservation = auth('api')->user()->activeReservation;
+            if(!$activeReservation){
+                return response()->json(['error'=>'user has no active reservations'],422);
+            }
+            Mqtt_Spot_Log::where([['license_plate',$activeReservation->license_plate],['location',$request->location],['type',$this->RESERVABLE_SPOT]])->first();
+            $spot = $activeReservation->reservableSpot->spot_code;
             $mqtt = new MqttService();
             $msg = [
                 'spot_code' => $spot,

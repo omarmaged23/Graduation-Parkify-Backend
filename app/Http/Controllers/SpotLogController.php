@@ -328,21 +328,25 @@ class SpotLogController extends Controller
     private function processExit($user, $logModel, $plate, $spotType = null, $deductBalance = true)
     {
         return DB::transaction(function () use ($user, $logModel, $plate, $spotType, $deductBalance) {
+            // Mutual condition for both public and reservable spots
             $dataCondition = [
                 ['license_plate', $plate],
                 ['is_payed', 0]
             ];
+            // Added condition for public spots
             if($spotType){
                 $dataCondition[] = ['location_id', $this->branchID];
             }
             $currentLog = $logModel::where($dataCondition)->orderBy('entered_at', 'desc')->first();
 
             if (!$currentLog) {
+                // Mutual condition for both public and reservable spots
                 $dataCondition = [
                     ['license_plate', $plate],
                     ['is_payed', 1],
                     ['exited_at', '>=', now()->subMinutes(10)]
                 ];
+                // Added condition for public spots
                 if($spotType){
                     $dataCondition[] = ['location_id', $this->branchID];
                 }
@@ -441,6 +445,7 @@ class SpotLogController extends Controller
                     $this->mqttService->publish(sprintf($this->EXIT_QR, $this->branch), $paymentUrl);
                     $data['qr_payment'] = $paymentUrl;
                     $currentLog->update($data);
+                    $this->mqttService->publish(sprintf($this->EXIT_DISPLAY, $this->branch),"Your QR code is ready!.\nKindly scan and pay to exit garage");
                     return response()->json(['status' => 'pending','message'=> 'Guest payment qrcode generated successfully.' ,'payment_qr'=>$paymentUrl]);
                 }
             }
