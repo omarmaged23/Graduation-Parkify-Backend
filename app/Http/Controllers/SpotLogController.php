@@ -140,8 +140,8 @@ class SpotLogController extends Controller
 //                'location_id' => $this->branchID
             ];
             if($type == $this->PUBLIC_SPOT){
-                $condition[] = [['location_id', '=', $this->branchID]];
-                $data[] = ['location_id' => $this->branchID];
+                $condition[] = ['location_id', '=', $this->branchID];
+                $data['location_id'] = $this->branchID;
             }
         }
         $log = $modelClass::where($condition)
