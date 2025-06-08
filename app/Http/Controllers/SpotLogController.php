@@ -101,12 +101,11 @@ class SpotLogController extends Controller
         return DB::transaction(function () use ($userPlate) {
             $user = $userPlate->user;
             $activeReservation = $user->activeReservation;
-            $locationCondition = $activeReservation->reservableSpot->location_id  == $this->branchID;
 
-            if ($activeReservation && $locationCondition && $user->activeReservationWithinLimit) {
+            if ($activeReservation && $activeReservation->reservableSpot->location_id  == $this->branchID && $user->activeReservationWithinLimit) {
                 return $this->parkInReservedSpot($activeReservation, $userPlate->plate, $user->id);
-            } else if ($activeReservation && !$user->activeReservationWithinLimit && $locationCondition) {
-                $this->mqttService->publish(sprintf($this->ENTRY_DISPLAY, $this->branch), $this->EARLY_ARRIVAL_MSG);
+            } else if ($activeReservation && !$user->activeReservationWithinLimit && $activeReservation->reservableSpot->location_id  == $this->branchID) {
+                $this->mqttService->publish(sprintf($this->ENTRY_DISPLAY, $this->branch), 'User Came Early');
                 return response()->json(['status' => 'error' , 'message' => $this->EARLY_ARRIVAL_MSG]);
             } else {
                 return $this->parkInPublicSpot($userPlate->plate, $user->id);

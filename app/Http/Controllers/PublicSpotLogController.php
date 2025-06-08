@@ -3,11 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Location;
-use App\Models\Public_Spot_Log;
 use App\Models\Public_Spot_Used;
-use App\Models\PublicSpotUsed;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class PublicSpotLogController extends Controller
 {

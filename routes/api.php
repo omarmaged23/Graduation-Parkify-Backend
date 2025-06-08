@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\ReservationController;
@@ -57,6 +58,18 @@ Route::middleware('auth:api')->group(function () {
 Route::middleware('auth:admin')->group(function () {
     // Logout
     Route::post('/admin/logout', [AdminAuthController::class, 'logout']);
+    // Dashboard
+    // ------------------------
+    Route::get('/admin/dashboard/getTotalProfit/{location_id?}',[DashboardController::class,'getTotalProfit']);
+    Route::get('/admin/dashboard/getTotalUsers',[DashboardController::class,'getTotalUsers']);
+    Route::get('/admin/dashboard/getAvailablePublicSpots/{location_id?}',[DashboardController::class,'getAvailablePublicSpots']);
+    Route::get('/admin/dashboard/getAvailableReservableSpots/{location_id?}',[DashboardController::class,'getAvailableReservableSpots']);
+    // ------------------------
+    Route::get('/admin/dashboard/getPopularPublicSpots/{location_id?}',[DashboardController::class,'getPopularPublicSpots']);
+    Route::get('/admin/dashboard/getPopularReservableSpots/{location_id?}',[DashboardController::class,'getPopularReservableSpots']);
+    Route::get('/admin/dashboard/getMonthlyProfit/{location_id?}',[DashboardController::class,'getMonthlyProfit']);
+    Route::get('/admin/dashboard/getUserAccountStatus',[DashboardController::class,'getUserAccountStatus']);
+    Route::get('/admin/dashboard/getPopularGifts',[DashboardController::class,'getPopularGifts']);
     // Spot Management
     Route::post('/admin/managePrices/{type}', [\App\Http\Controllers\Admin\SpotManagementController::class, 'managePrices']);
     Route::post('/admin/editPointsPerHour', [\App\Http\Controllers\Admin\SpotManagementController::class, 'editPointsPerHour']);
