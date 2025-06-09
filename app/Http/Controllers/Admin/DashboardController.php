@@ -69,7 +69,9 @@ class DashboardController extends Controller
                 return response()->json(['error' => 'location not found']);
             }
         }
-        $reservableSpots = Reservable_Spot::where([['location_id',$location_id],['is_active',1]])->count();
+        $reservableSpots = Reservable_Spot::where('is_active',1)->when($location_id, function ($query, $location_id) {
+            return $query->where('location_id', $location_id);
+        })->count();
         return response()->json(['success'=>$reservableSpots],200);
     }
 
