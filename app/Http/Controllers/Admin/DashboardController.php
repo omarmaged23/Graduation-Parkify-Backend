@@ -26,7 +26,7 @@ class DashboardController extends Controller
        return $location;
     }
     ####################################################
-    public function getTotalProfit($location_id)
+    public function getTotalProfit($location_id = null)
     {
         if($location_id){
             $location = $this->checkLocation($location_id);
@@ -47,7 +47,7 @@ class DashboardController extends Controller
         return response()->json(['success'=>$guestsProfit + $usersPublicProfit + $usersReservableProfit],200);
     }
 
-    public function getAvailablePublicSpots($location_id){
+    public function getAvailablePublicSpots($location_id = null){
         if($location_id){
             $location = $this->checkLocation($location_id);
             if(!$location){
@@ -58,7 +58,7 @@ class DashboardController extends Controller
         return response()->json(['success'=>$publicSpots],200);
     }
 
-    public function getAvailableReservableSpots($location_id){
+    public function getAvailableReservableSpots($location_id = null){
         if($location_id){
             $location = $this->checkLocation($location_id);
             if(!$location){
@@ -74,7 +74,7 @@ class DashboardController extends Controller
         return response()->json(['success'=>$users],200);
     }
     ####################################################
-    public function getPopularPublicSpots($location_id)
+    public function getPopularPublicSpots($location_id = null)
     {
         if($location_id){
             $location = $this->checkLocation($location_id);
@@ -92,7 +92,7 @@ class DashboardController extends Controller
         return response()->json(['success'=>$popularPublicSpots],200);
     }
 
-    public function getPopularReservableSpots($location_id)
+    public function getPopularReservableSpots($location_id = null)
     {
         if($location_id){
             $location = $this->checkLocation($location_id);
@@ -151,7 +151,7 @@ class DashboardController extends Controller
         return response()->json(['success'=>$topGifts],200);
     }
 
-    public function getMonthlyProfit($location_id)
+    public function getMonthlyProfit($location_id = null)
     {
         if($location_id){
             $location = $this->checkLocation($location_id);
