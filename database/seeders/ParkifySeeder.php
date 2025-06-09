@@ -97,30 +97,71 @@ class ParkifySeeder extends Seeder
             'address' => 'somewhere in obour',
             'gps_location' => 'http://obourgps.com'
         ]);
+        Location::create([
+            'name' => 'sohag',
+            'address' => 'somewhere in sohag',
+            'gps_location' => 'http://sohaggps.com'
+        ]);
+        Location::create([
+            'name' => 'elshorouk',
+            'address' => 'somewhere in elshorouk',
+            'gps_location' => 'http://elshoroukgps.com'
+        ]);
+        Location::create([
+            'name' => 'disneyland',
+            'address' => 'somewhere in disneyland',
+            'gps_location' => 'http://disneylandgps.com'
+        ]);
 
         // generate random gifts
         Gift::create([
-            'description' => 'this is gift 1',
+            'description' => 'gift 1',
             'cost' => 40,
+            'discount_percentage' => 5,
+        ]);
+        Gift::create([
+            'description' => 'gift 2',
+            'cost' => 80,
             'discount_percentage' => 10,
         ]);
         Gift::create([
-            'description' => 'this is gift 2',
-            'cost' => 80,
+            'description' => 'gift 3',
+            'cost' => 120,
+            'discount_percentage' => 15,
+        ]);
+        Gift::create([
+            'description' => 'gift 4',
+            'cost' => 160,
             'discount_percentage' => 20,
         ]);
         Gift::create([
-            'description' => 'this is gift 3',
-            'cost' => 120,
+            'description' => 'gift 5',
+            'cost' => 200,
+            'discount_percentage' => 25,
+        ]);
+        // generate random gifts
+        Gift::create([
+            'description' => 'gift 6',
+            'cost' => 40,
             'discount_percentage' => 30,
         ]);
         Gift::create([
-            'description' => 'this is gift 4',
-            'cost' => 160,
+            'description' => 'gift 7',
+            'cost' => 80,
+            'discount_percentage' => 35,
+        ]);
+        Gift::create([
+            'description' => 'gift 8',
+            'cost' => 120,
             'discount_percentage' => 40,
         ]);
         Gift::create([
-            'description' => 'this is gift 5',
+            'description' => 'gift 9',
+            'cost' => 160,
+            'discount_percentage' => 45,
+        ]);
+        Gift::create([
+            'description' => 'gift 10',
             'cost' => 200,
             'discount_percentage' => 50,
         ]);
@@ -192,6 +233,75 @@ class ParkifySeeder extends Seeder
             'spot_code' => 'RO2x2',
             'management_id' => 1,
             'location_id' => 2,
+        ]);
+        // generate public spots
+        Public_Spot::create([
+            'spot_code' => 'PS1x1',
+            'management_id' => 1,
+            'location_id' => 3,
+        ]);
+        Public_Spot::create([
+            'spot_code' => 'PS2x2',
+            'management_id' => 1,
+            'location_id' => 3,
+        ]);
+
+        // generate reservable spots
+        Reservable_Spot::create([
+            'spot_code' => 'RS1x1',
+            'management_id' => 1,
+            'location_id' => 3,
+        ]);
+        Reservable_Spot::create([
+            'spot_code' => 'RS2x2',
+            'management_id' => 1,
+            'location_id' => 3,
+        ]);
+        // generate public spots
+        Public_Spot::create([
+            'spot_code' => 'PK1x1',
+            'management_id' => 1,
+            'location_id' => 4,
+        ]);
+        Public_Spot::create([
+            'spot_code' => 'PK2x2',
+            'management_id' => 1,
+            'location_id' => 4,
+        ]);
+
+        // generate reservable spots
+        Reservable_Spot::create([
+            'spot_code' => 'RK1x1',
+            'management_id' => 1,
+            'location_id' => 4,
+        ]);
+        Reservable_Spot::create([
+            'spot_code' => 'RK2x2',
+            'management_id' => 1,
+            'location_id' => 4,
+        ]);
+        // generate public spots
+        Public_Spot::create([
+            'spot_code' => 'PD1x1',
+            'management_id' => 1,
+            'location_id' => 5,
+        ]);
+        Public_Spot::create([
+            'spot_code' => 'PD2x2',
+            'management_id' => 1,
+            'location_id' => 5,
+        ]);
+
+        // generate reservable spots
+        Reservable_Spot::create([
+            'spot_code' => 'RD1x1',
+            'management_id' => 1,
+            'location_id' => 5,
+        ]);
+        Reservable_Spot::create([
+            'spot_code' => 'RD2x2',
+            'management_id' => 1,
+            'location_id' => 5,
         ]);
         // generate spot logs with payed status
         Public_Spot_Log::create([

@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
         // ]);
         $this->call([
             ParkifySeeder::class,
+            DashboardSeeder::class,
         ]);
     }
 }

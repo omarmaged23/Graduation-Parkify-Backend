@@ -4,13 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Billing;
+use App\Models\Guest_Spot_Log;
 use App\Models\Location;
 use App\Models\Public_Spot;
 use App\Models\Public_Spot_Log;
 use App\Models\Public_Spot_Used;
 use App\Models\Reservable_Spot_Log;
 use App\Models\User;
-use Illuminate\Http\Request;
+use App\Models\User_Data;
+use App\Models\User_Gift;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -32,9 +34,9 @@ class DashboardController extends Controller
                return response()->json(['error' => 'location not found']);
            }
         }
-        $guestsProfit = Billing::where('status','completed')->when($location_id, function ($query, $location) {
-            return $query->where('location', $location);
-        })->sum('amount');
+        $guestsProfit = Guest_Spot_Log::where('is_payed',1)->when($location_id, function ($query, $location_id) {
+            return $query->where('location_id', $location_id);
+        })->sum('invoice_price');
         $usersPublicProfit = Public_Spot_Log::where('is_payed',1)->when($location_id, function ($query, $location_id) {
             return $query->where('location_id', $location_id);
         })->sum('invoice_price');
@@ -117,4 +119,93 @@ class DashboardController extends Controller
         return response()->json(['success'=>$popularReservableSpots],200);
     }
 
+    public function getUserAccountStatus()
+    {
+        $counts = User_Data::select('is_active', DB::raw('COUNT(*) as total'))
+            ->groupBy('is_active')
+            ->get()
+            ->mapWithKeys(function ($item) {
+                return [
+                    $item->is_active ? 'active' : 'inactive' => $item->total
+                ];
+            });
+        return response()->json(['success'=>$counts],200);
+    }
+
+    public function getPopularGifts()
+    {
+        $topGifts = User_Gift::select('gift_id', DB::raw('COUNT(*) as usage_count'))
+            ->groupBy('gift_id')
+            ->orderByDesc('usage_count')
+            ->limit(3)
+            ->with('gift:id,description,discount_percentage','cost') // only fetch required fields
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'gift_description' => $item->gift->description ?? 'Unknown',
+                    'discount_percentage' => $item->gift->discount_percentage ?? 0,
+                    'usage_count' => $item->usage_count,
+                ];
+            });
+
+        return response()->json(['success'=>$topGifts],200);
+    }
+
+    public function getMonthlyProfit($location_id)
+    {
+        if($location_id){
+            $location = $this->checkLocation($location_id);
+            if(!$location){
+                return response()->json(['error' => 'location not found']);
+            }
+        }
+        $months = collect(range(1, 12))->mapWithKeys(fn($m) => [
+            \Carbon\Carbon::create()->month($m)->format('M') => 0
+        ]);
+
+        $getMonthlySums = function ($model, $dateColumn, $sumColumn, $filters = []) use ($location_id) {
+            return $model::select(
+                DB::raw("MONTH($dateColumn) as month"),
+                DB::raw("SUM($sumColumn) as total")
+            )
+                ->when($location_id, fn($q) => $q->where($filters['location_column'], $location_id))
+                ->when($filters['extra'] ?? null, function ($query) use ($filters) {
+                    foreach ($filters['extra'] as $col => $val) {
+                        $query->where($col, $val);
+                    }
+                })
+                ->groupBy(DB::raw("MONTH($dateColumn)"))
+                ->pluck('total', 'month')
+                ->mapWithKeys(fn($value, $monthNum) => [
+                    \Carbon\Carbon::create()->month($monthNum)->format('M') => $value
+                ]);
+        };
+
+        $guests = $months->merge(
+            $getMonthlySums(Billing::class, 'entered_at', 'invoice_price', [
+                'location_column' => 'location_id',
+                'extra' => ['is_payed' => 1]
+            ])
+        );
+
+        $public = $months->merge(
+            $getMonthlySums(Public_Spot_Log::class, 'entered_at', 'invoice_price', [
+                'location_column' => 'location_id',
+                'extra' => ['is_payed' => 1]
+            ])
+        );
+
+        $reservable = $months->merge(
+            $getMonthlySums(Reservable_Spot_Log::class, 'entered_at', 'invoice_price', [
+                'location_column' => 'location_id',
+                'extra' => ['is_payed' => 1]
+            ])
+        );
+
+        // Sum monthly values across all three
+        $totalMonthly = $months->map(fn($_, $month) =>
+            ($guests[$month] ?? 0) + ($public[$month] ?? 0) + ($reservable[$month] ?? 0)
+        );
+        return response()->json(['success'=>$totalMonthly], 200);
+    }
 }
