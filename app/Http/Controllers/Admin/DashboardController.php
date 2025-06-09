@@ -46,7 +46,7 @@ class DashboardController extends Controller
             });
         })->sum('invoice_price');
 
-        return response()->json(['success'=>round($guestsProfit + $usersPublicProfit + $usersReservableProfit)],200);
+        return response()->json(['success'=>round($gues,2tsProfit + $usersPublicProfit + $usersReservableProfit,2)],200);
     }
 
     public function getAvailablePublicSpots($location_id = null){
@@ -195,7 +195,7 @@ class DashboardController extends Controller
             return $query->groupBy(DB::raw("MONTH($dateColumn)"))
                 ->pluck('total', 'month')
                 ->mapWithKeys(fn($value, $monthNum) => [
-                    \Carbon\Carbon::create()->month($monthNum)->format('M') => round($value)
+                    \Carbon\Carbon::create()->month($monthNum)->format('M') => round($value,2)
                 ]);
         };
 
