@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Billing;
 use App\Models\Guest_Spot_Log;
 use App\Models\Location;
 use App\Models\Public_Spot;
 use App\Models\Public_Spot_Log;
 use App\Models\Public_Spot_Used;
+use App\Models\Reservable_Spot;
 use App\Models\Reservable_Spot_Log;
 use App\Models\User;
 use App\Models\User_Data;
@@ -41,7 +41,9 @@ class DashboardController extends Controller
             return $query->where('location_id', $location_id);
         })->sum('invoice_price');
         $usersReservableProfit = Reservable_Spot_Log::where('is_payed',1)->when($location_id, function ($query, $location_id) {
-            return $query->where('location_id', $location_id);
+            return $query->whereHas('reservableSpot', function ($q) use ($location_id) {
+                $q->where('location_id', $location_id);
+            });
         })->sum('invoice_price');
 
         return response()->json(['success'=>$guestsProfit + $usersPublicProfit + $usersReservableProfit],200);
@@ -54,7 +56,9 @@ class DashboardController extends Controller
                 return response()->json(['error' => 'location not found']);
             }
         }
-        $publicSpots = Public_Spot::where([['location_id',$location_id],['is_active',1]])->count();
+        $publicSpots = Public_Spot::where('is_active',1)->when($location_id, function ($query, $location_id) {
+            return $query->where('location_id', $location_id);
+        })->count();
         return response()->json(['success'=>$publicSpots],200);
     }
 
@@ -65,7 +69,7 @@ class DashboardController extends Controller
                 return response()->json(['error' => 'location not found']);
             }
         }
-        $reservableSpots = Public_Spot::where([['location_id',$location_id],['is_active',1]])->count();
+        $reservableSpots = Reservable_Spot::where([['location_id',$location_id],['is_active',1]])->count();
         return response()->json(['success'=>$reservableSpots],200);
     }
 
@@ -82,7 +86,7 @@ class DashboardController extends Controller
                 return response()->json(['error' => 'location not found']);
             }
         }
-        $popularPublicSpots = Public_Spot_Used::when($location, function ($query, $location_id) {
+        $popularPublicSpots = Public_Spot_Used::when($location_id, function ($query, $location_id) {
             return $query->where('location_id', $location_id);
         })->select('spot_code', DB::raw('COUNT(*) as count'))
             ->groupBy('spot_code')
@@ -100,9 +104,9 @@ class DashboardController extends Controller
                 return response()->json(['error' => 'location not found']);
             }
         }
-        $popularReservableSpots = Reservable_Spot_Log::when($location, function ($query, $location) {
-            $query->whereHas('reservableSpot', function ($q) use ($location) {
-                $q->where('location', $location);
+        $popularReservableSpots = Reservable_Spot_Log::when($location_id, function ($query, $location_id) {
+            $query->whereHas('reservableSpot', function ($q) use ($location_id) {
+                $q->where('location_id', $location_id);
             });
         })->select('reservable_spot_id', DB::raw('COUNT(*) as count'))
             ->groupBy('reservable_spot_id')
@@ -164,17 +168,28 @@ class DashboardController extends Controller
         ]);
 
         $getMonthlySums = function ($model, $dateColumn, $sumColumn, $filters = []) use ($location_id) {
-            return $model::select(
+            $query = $model::select(
                 DB::raw("MONTH($dateColumn) as month"),
                 DB::raw("SUM($sumColumn) as total")
-            )
-                ->when($location_id, fn($q) => $q->where($filters['location_column'], $location_id))
-                ->when($filters['extra'] ?? null, function ($query) use ($filters) {
-                    foreach ($filters['extra'] as $col => $val) {
-                        $query->where($col, $val);
-                    }
-                })
-                ->groupBy(DB::raw("MONTH($dateColumn)"))
+            );
+
+            // Use whereHas for Reservable_Spot_Log relation filter
+            if ($model === \App\Models\Reservable_Spot_Log::class && $location_id) {
+                $query->whereHas('reservableSpot', function ($q) use ($location_id, $filters) {
+                    $q->where('location_id', $location_id);
+                });
+            } elseif ($location_id) {
+                $query->where($filters['location_column'], $location_id);
+            }
+
+            // Apply other optional filters
+            if (!empty($filters['extra'])) {
+                foreach ($filters['extra'] as $col => $val) {
+                    $query->where($col, $val);
+                }
+            }
+
+            return $query->groupBy(DB::raw("MONTH($dateColumn)"))
                 ->pluck('total', 'month')
                 ->mapWithKeys(fn($value, $monthNum) => [
                     \Carbon\Carbon::create()->month($monthNum)->format('M') => $value
@@ -182,7 +197,7 @@ class DashboardController extends Controller
         };
 
         $guests = $months->merge(
-            $getMonthlySums(Billing::class, 'entered_at', 'invoice_price', [
+            $getMonthlySums(Guest_Spot_Log::class, 'entered_at', 'invoice_price', [
                 'location_column' => 'location_id',
                 'extra' => ['is_payed' => 1]
             ])
@@ -197,15 +212,15 @@ class DashboardController extends Controller
 
         $reservable = $months->merge(
             $getMonthlySums(Reservable_Spot_Log::class, 'entered_at', 'invoice_price', [
-                'location_column' => 'location_id',
+                'location_column' => null,
                 'extra' => ['is_payed' => 1]
             ])
         );
 
-        // Sum monthly values across all three
         $totalMonthly = $months->map(fn($_, $month) =>
             ($guests[$month] ?? 0) + ($public[$month] ?? 0) + ($reservable[$month] ?? 0)
         );
-        return response()->json(['success'=>$totalMonthly], 200);
+
+        return response()->json(['success' => $totalMonthly], 200);
     }
 }
