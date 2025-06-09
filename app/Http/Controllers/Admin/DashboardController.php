@@ -26,7 +26,7 @@ class DashboardController extends Controller
        return $location;
     }
     ####################################################
-    private function getTotalProfit($location_id)
+    public function getTotalProfit($location_id)
     {
         if($location_id){
             $location = $this->checkLocation($location_id);
@@ -47,7 +47,7 @@ class DashboardController extends Controller
         return response()->json(['success'=>$guestsProfit + $usersPublicProfit + $usersReservableProfit],200);
     }
 
-    private function getAvailablePublicSpots($location_id){
+    public function getAvailablePublicSpots($location_id){
         if($location_id){
             $location = $this->checkLocation($location_id);
             if(!$location){
@@ -58,7 +58,7 @@ class DashboardController extends Controller
         return response()->json(['success'=>$publicSpots],200);
     }
 
-    private function getAvailableReservableSpots($location_id){
+    public function getAvailableReservableSpots($location_id){
         if($location_id){
             $location = $this->checkLocation($location_id);
             if(!$location){
@@ -69,12 +69,12 @@ class DashboardController extends Controller
         return response()->json(['success'=>$reservableSpots],200);
     }
 
-    private function getTotalUsers(){
+    public function getTotalUsers(){
         $users = User::count();
         return response()->json(['success'=>$users],200);
     }
     ####################################################
-    private function getPopularPublicSpots($location_id)
+    public function getPopularPublicSpots($location_id)
     {
         if($location_id){
             $location = $this->checkLocation($location_id);
@@ -92,7 +92,7 @@ class DashboardController extends Controller
         return response()->json(['success'=>$popularPublicSpots],200);
     }
 
-    private function getPopularReservableSpots($location_id)
+    public function getPopularReservableSpots($location_id)
     {
         if($location_id){
             $location = $this->checkLocation($location_id);
