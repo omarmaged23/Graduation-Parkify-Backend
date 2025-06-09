@@ -46,7 +46,7 @@ class DashboardController extends Controller
             });
         })->sum('invoice_price');
 
-        return response()->json(['success'=>round($gues,2tsProfit + $usersPublicProfit + $usersReservableProfit,2)],200);
+        return response()->json(['success'=>round($guestsProfit + $usersPublicProfit + $usersReservableProfit,2)],200);
     }
 
     public function getAvailablePublicSpots($location_id = null){
