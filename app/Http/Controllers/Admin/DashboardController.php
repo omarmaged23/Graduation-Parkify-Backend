@@ -46,7 +46,7 @@ class DashboardController extends Controller
             });
         })->sum('invoice_price');
 
-        return response()->json(['success'=>$guestsProfit + $usersPublicProfit + $usersReservableProfit],200);
+        return response()->json(['success'=>round($guestsProfit + $usersPublicProfit + $usersReservableProfit)],200);
     }
 
     public function getAvailablePublicSpots($location_id = null){
@@ -144,12 +144,13 @@ class DashboardController extends Controller
             ->groupBy('gift_id')
             ->orderByDesc('usage_count')
             ->limit(3)
-            ->with('gift:id,description,discount_percentage','cost') // only fetch required fields
+            ->with('gift:id,description,discount_percentage,cost') // only fetch required fields
             ->get()
             ->map(function ($item) {
                 return [
-                    'gift_description' => $item->gift->description ?? 'Unknown',
-                    'discount_percentage' => $item->gift->discount_percentage ?? 0,
+                    'description' => $item->gift->description ?? 'Unknown',
+                    'discount' => $item->gift->discount_percentage ?? 0,
+                    'cost' => $item->gift->cost ?? 'Unknown',
                     'usage_count' => $item->usage_count,
                 ];
             });
@@ -194,7 +195,7 @@ class DashboardController extends Controller
             return $query->groupBy(DB::raw("MONTH($dateColumn)"))
                 ->pluck('total', 'month')
                 ->mapWithKeys(fn($value, $monthNum) => [
-                    \Carbon\Carbon::create()->month($monthNum)->format('M') => $value
+                    \Carbon\Carbon::create()->month($monthNum)->format('M') => round($value)
                 ]);
         };
 
