@@ -114,9 +114,9 @@ class ReservationController extends Controller
         }
         $now = Carbon::now();
         $expectedTime = $reservation->expected_arrival;
-        $difference = $expectedTime->diffInSeconds($now,false);
+        $difference = $now->diffInSeconds($expectedTime,false);
         $total = null;
-        if ($difference < 0 ){
+        if ($difference > 0 ){
             $difference = round(abs($difference) /3600,2);
             $fees = $spot->spotManagement->price_per_hour;
             $total = $difference * $fees;
@@ -125,7 +125,7 @@ class ReservationController extends Controller
                 $this->sendSms("Not enough balance to cancel reservation.\nMake sure you account has enough credits to cancel reservation.",$user->userData->phone);
                 return response()->json(['error'=>'user not enough balance to cancel reservation'],422);
             }
-            $user->userData()->decrement('balance',$total);
+            $user->userData()->decrement('balance',1000);
         }
         try {
             DB::transaction(function () use ($request,$reservation){
@@ -141,7 +141,8 @@ class ReservationController extends Controller
             }
             return response()->json(['error'=>'cancellation failed','message' => $e->getMessage()],422);
         }
-        $msg = 'reservation cancelled successfully';
+        $total = $total ?? 0 ;
+        $msg = 'reservation cancelled successfully'.'total = '.$total;
         return response()->json(['success'=> $msg],200);
     }
     public function deactivateReservationBlocker(Request $request)
