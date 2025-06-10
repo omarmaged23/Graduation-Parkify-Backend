@@ -97,6 +97,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/getGuestLogs',[\App\Http\Controllers\Admin\ManageUserController::class, 'getGuestLogs']);
     // Location Management
     Route::post('/admin/addLocation',[\App\Http\Controllers\Admin\LocationController::class, 'addLocation']);
+    Route::get('/admin/getLocation/{id}',[\App\Http\Controllers\Admin\LocationController::class, 'getLocation']);
     Route::post('/admin/editLocation/{id}',[\App\Http\Controllers\Admin\LocationController::class, 'editLocation']);
     Route::post('/admin/changeLocationStatus/{id}',[\App\Http\Controllers\Admin\LocationController::class, 'changeLocationStatus']);
     Route::post('/admin/deleteLocation',[\App\Http\Controllers\Admin\LocationController::class, 'deleteLocation']);

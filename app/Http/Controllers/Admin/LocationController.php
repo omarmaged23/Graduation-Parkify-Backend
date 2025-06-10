@@ -24,7 +24,14 @@ class LocationController extends Controller
         }
         return response()->json(['success' => 'Location created'], 200);
     }
-
+    public function getLocation($id)
+    {
+        $location = Location::find($id);
+        if (!$location) {
+            return response()->json(['error' => 'Location not found'], 404);
+        }
+        return response()->json(['location' => $location], 200);
+    }
     public function editLocation(Request $request, $id){
         $request->validate([
             'name' => ['required','unique:locations,name,'.$id],
