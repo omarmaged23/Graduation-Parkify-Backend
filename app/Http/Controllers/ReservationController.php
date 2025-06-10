@@ -116,10 +116,10 @@ class ReservationController extends Controller
         $expectedTime = $reservation->expected_arrival;
         $difference = $now->diffInSeconds($expectedTime,false);
         $total = null;
-        if ($difference > 0 ){
-            $difference = round(abs($difference) /3600,2);
+        if ($difference < 0 ){
+            $Hours = round(abs($difference) / 3600,2);
             $fees = $spot->spotManagement->price_per_hour;
-            $total = $difference * $fees;
+            $total = $Hours * $fees;
             $userBalance = $user->userData->balance;
             if ($userBalance < $total){
                 $this->sendSms("Not enough balance to cancel reservation.\nMake sure you account has enough credits to cancel reservation.",$user->userData->phone);
@@ -141,8 +141,8 @@ class ReservationController extends Controller
             }
             return response()->json(['error'=>'cancellation failed','message' => $e->getMessage()],422);
         }
-        $total = $total ?? 0 ;
-        $msg = 'reservation cancelled successfully'.'total = '.$total;
+        $total = $total ?? 0;
+        $msg = "reservation cancelled successfully.\nYou were charged $total EGP";
         return response()->json(['success'=> $msg],200);
     }
     public function deactivateReservationBlocker(Request $request)
