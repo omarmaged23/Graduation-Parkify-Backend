@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\NotificationTrait;
 use App\Models\Location;
 use App\Models\Mqtt_Spot_Log;
 use App\Models\Public_Spot;
 use App\Models\Reservable_Spot;
-use App\Models\Reservation;
 use App\Models\Spot_Management;
 use App\Services\MqttService;
 use Carbon\Carbon;
@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 class ReservationController extends Controller
 {
+    use NotificationTrait;
     private $AVAILABLE_SPOTS = 'garage/%s/available_spots';
     private $PUBLIC_SPOT = 'Public Spot';
     private $RESERVABLE_SPOT = 'Reservable Spot';
@@ -101,9 +102,30 @@ class ReservationController extends Controller
         return $transaction;
     }
     public function cancelReservation(Request $request){
-        $reservation = auth('api')->user()->activeReservation;
+        $user = auth('api')->user();
+        $reservation = $user->activeReservation;
         if(!$reservation){
             return response()->json(['error'=>'reservation not found'],422);
+        }
+        $spot = $reservation->reservableSpot;
+        $checkLogs = Mqtt_Spot_Log::where([['license_plate',$reservation->license_plate],['location',$spot->location->name],['type',$this->RESERVABLE_SPOT]])->exists();
+        if($checkLogs){
+            return response()->json(['error'=>'user is already in garage.'],422);
+        }
+        $now = Carbon::now();
+        $expectedTime = $reservation->expected_arrival;
+        $difference = $expectedTime->diffInSeconds($now,false);
+        $total = null;
+        if ($difference < 0 ){
+            $difference = round(abs($difference) /3600,2);
+            $fees = $spot->spotManagement->price_per_hour;
+            $total = $difference * $fees;
+            $userBalance = $user->userData->balance;
+            if ($userBalance < $total){
+                $this->sendSms("Not enough balance to cancel reservation.\nMake sure you account has enough credits to cancel reservation.",$user->userData->phone);
+                return response()->json(['error'=>'user not enough balance to cancel reservation'],422);
+            }
+            $user->userData()->decrement('balance',$total);
         }
         try {
             DB::transaction(function () use ($request,$reservation){
@@ -112,10 +134,15 @@ class ReservationController extends Controller
                 ]);
                 $reservation->delete();
             });
+            $this->updateAvailableSpots($spot->location);
         } catch (\Exception $e){
+            if ($total){
+                $user->userData()->increment('balance',$total);
+            }
             return response()->json(['error'=>'cancellation failed','message' => $e->getMessage()],422);
         }
-        return response()->json(['success'=>'reservation cancelled successfully'],200);
+        $msg = 'reservation cancelled successfully';
+        return response()->json(['success'=> $msg],200);
     }
     public function deactivateReservationBlocker(Request $request)
     {
@@ -127,7 +154,10 @@ class ReservationController extends Controller
             if(!$activeReservation){
                 return response()->json(['error'=>'user has no active reservations'],422);
             }
-            Mqtt_Spot_Log::where([['license_plate',$activeReservation->license_plate],['location',$request->location],['type',$this->RESERVABLE_SPOT]])->first();
+            $checkLogs = Mqtt_Spot_Log::where([['license_plate',$activeReservation->license_plate],['location',$request->location],['type',$this->RESERVABLE_SPOT]])->exists();
+            if(!$checkLogs){
+                return response()->json(['error'=>'user must be in garage to deactivate blocker'],422);
+            }
             $spot = $activeReservation->reservableSpot->spot_code;
             $mqtt = new MqttService();
             $msg = [

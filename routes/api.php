@@ -70,6 +70,9 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/dashboard/getMonthlyProfit/{location_id?}',[DashboardController::class,'getMonthlyProfit']);
     Route::get('/admin/dashboard/getUserAccountStatus',[DashboardController::class,'getUserAccountStatus']);
     Route::get('/admin/dashboard/getPopularGifts',[DashboardController::class,'getPopularGifts']);
+    Route::get('/admin/dashboard/getAllDashboardData/{location_id?}',[DashboardController::class,'getAllDashboardData']);
+    Route::get('/admin/dashboard/getAllLocationsReport',[DashboardController::class,'getAllLocationsReport']);
+    Route::post('/admin/dashboard/refreshDashboardCache/{location_id?}',[DashboardController::class,'refreshDashboardCache']);
     // Spot Management
     Route::post('/admin/managePrices/{type}', [\App\Http\Controllers\Admin\SpotManagementController::class, 'managePrices']);
     Route::post('/admin/editPointsPerHour', [\App\Http\Controllers\Admin\SpotManagementController::class, 'editPointsPerHour']);

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ParkingExport;
 use App\Http\Controllers\Controller;
+use App\Models\Dashboard; // Your new model
 use App\Models\Guest_Spot_Log;
 use App\Models\Location;
 use App\Models\Public_Spot;
@@ -13,100 +15,328 @@ use App\Models\Reservable_Spot_Log;
 use App\Models\User;
 use App\Models\User_Data;
 use App\Models\User_Gift;
+use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DashboardController extends Controller
 {
     private function checkLocation($location_id)
     {
-       $location = Location::find($location_id);
-       if(!$location){
-           return false;
-       }
-       return $location;
+        $location = Location::find($location_id);
+        if(!$location){
+            return false;
+        }
+        return $location;
     }
-    ####################################################
+
+    /**
+     * Get cached dashboard data or recalculate if needed
+     */
+    private function getCachedDashboardData($location_id = null)
+    {
+        if ($location_id) {
+            $location_key = Location::find($location_id)->name;
+        } else {
+            $location_key = 'all';
+        }
+
+        // Check if cached data exists and is fresh (less than 12 hours old)
+        $cached = Dashboard::where('location', $location_key)
+            ->where('updated_at', '>', Carbon::now()->subHours(12))
+            ->first();
+
+        if ($cached) {
+            return $cached;
+        }
+
+        // Recalculate and cache the data
+        return $this->recalculateAndCache($location_id, $location_key);
+    }
+
+    /**
+     * Recalculate all dashboard metrics and cache them
+     */
+    private function recalculateAndCache($location_id, $location_key)
+    {
+        $data = [
+            'location' => $location_key,
+            'total_profit' => $this->calculateTotalProfit($location_id),
+            'available_public_spots' => $this->calculateAvailablePublicSpots($location_id),
+            'available_reservable_spots' => $this->calculateAvailableReservableSpots($location_id),
+            'total_users' => $this->calculateTotalUsers(),
+            'popular_public_spots' => json_encode($this->calculatePopularPublicSpots($location_id)),
+            'popular_reservable_spots' => json_encode($this->calculatePopularReservableSpots($location_id)),
+            'active_user_accounts' => $this->calculateActiveUsers(),
+            'inactive_user_accounts' => $this->calculateInactiveUsers(),
+            'popular_gifts' => json_encode($this->calculatePopularGifts()),
+            'monthly_profit' => json_encode($this->calculateMonthlyProfit($location_id),JSON_FORCE_OBJECT),
+        ];
+
+        // Update or create cache record
+        Dashboard::updateOrCreate(
+            ['location' => $location_key],
+            $data
+        );
+
+        return Dashboard::where('location', $location_key)->first();
+    }
+
+    /**
+     * Force refresh cache for a location
+     */
+    public function refreshDashboardCache(Request $request , $location_id = null)
+    {
+        if ($location_id) {
+            $location_key = Location::find($location_id)->name;
+        } else {
+            $location_key = 'all';
+        }
+
+        if($location_id && !$this->checkLocation($location_id)){
+            return response()->json(['error' => 'location not found']);
+        }
+
+        $this->recalculateAndCache($location_id, $location_key);
+
+        return response()->json(['success' => 'Dashboard cache refreshed'], 200);
+    }
+
+    // Modified public methods to use cache
     public function getTotalProfit($location_id = null)
     {
-        if($location_id){
-            $location = $this->checkLocation($location_id);
-           if(!$location){
-               return response()->json(['error' => 'location not found']);
-           }
+        if($location_id && !$this->checkLocation($location_id)){
+            return response()->json(['error' => 'location not found']);
         }
+
+        $cached = $this->getCachedDashboardData($location_id);
+        return response()->json(['success' => $cached->total_profit], 200);
+    }
+
+    public function getAvailablePublicSpots($location_id = null)
+    {
+        if($location_id && !$this->checkLocation($location_id)){
+            return response()->json(['error' => 'location not found']);
+        }
+
+        $cached = $this->getCachedDashboardData($location_id);
+        return response()->json(['success' => $cached->available_public_spots], 200);
+    }
+
+    public function getAvailableReservableSpots($location_id = null)
+    {
+        if($location_id && !$this->checkLocation($location_id)){
+            return response()->json(['error' => 'location not found']);
+        }
+
+        $cached = $this->getCachedDashboardData($location_id);
+        return response()->json(['success' => $cached->available_reservable_spots], 200);
+    }
+
+    public function getTotalUsers()
+    {
+        $cached = $this->getCachedDashboardData();
+        return response()->json(['success' => $cached->total_users], 200);
+    }
+
+    public function getPopularPublicSpots($location_id = null)
+    {
+        if($location_id && !$this->checkLocation($location_id)){
+            return response()->json(['error' => 'location not found']);
+        }
+
+        $cached = $this->getCachedDashboardData($location_id);
+        $spots = json_decode($cached->popular_public_spots);
+
+        return response()->json(['success' => $spots], 200);
+    }
+
+    public function getPopularReservableSpots($location_id = null)
+    {
+        if($location_id && !$this->checkLocation($location_id)){
+            return response()->json(['error' => 'location not found']);
+        }
+
+        $cached = $this->getCachedDashboardData($location_id);
+        $spots = json_decode($cached->popular_reservable_spots);
+        return response()->json(['success' => $spots], 200);
+    }
+
+    public function getUserAccountStatus()
+    {
+        $cached = $this->getCachedDashboardData();
+        return response()->json(['success' => [
+            'active' => $cached->active_user_accounts,
+            'inactive' => $cached->inactive_user_accounts
+        ]], 200);
+    }
+
+    public function getPopularGifts()
+    {
+        $cached = $this->getCachedDashboardData();
+        $gift = json_decode($cached->popular_gifts);
+        return response()->json(['success' => $gift], 200);
+    }
+
+    public function getMonthlyProfit($location_id = null)
+    {
+        if($location_id && !$this->checkLocation($location_id)){
+            return response()->json(['error' => 'location not found']);
+        }
+
+        $cached = $this->getCachedDashboardData($location_id);
+        $profit = json_decode($cached->monthly_profit,true);
+        $monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        $orderedProfit = [];
+        foreach ($monthOrder as $month) {
+            $key = $month;
+            if (array_key_exists($key, $profit)) {
+                $orderedProfit[$key] = $profit[$key];
+            }
+        }
+        return response()->json(['success' => $orderedProfit], 200);    }
+
+    /**
+     * Get all dashboard data at once (useful for reports)
+     */
+    public function getAllDashboardData($location_id = null)
+    {
+        if($location_id && !$this->checkLocation($location_id)){
+            return response()->json(['error' => 'location not found']);
+        }
+
+        $cached = $this->getCachedDashboardData($location_id);
+        $data = [
+            'location' => $cached->location,
+            'total_profit' => $cached->total_profit,
+            'available_public_spots' => $cached->available_public_spots,
+            'available_reservable_spots' => $cached->available_reservable_spots,
+            'total_users' => $cached->total_users,
+            'popular_public_spots' => json_decode($cached->popular_public_spots,true),
+            'popular_reservable_spots' => json_decode($cached->popular_reservable_spots,true),
+            'active_user_accounts' => $cached->active_user_accounts,
+            'inactive_user_accounts' => $cached->inactive_user_accounts,
+            'popular_gifts' => json_decode($cached->popular_gifts,true),
+            'monthly_profit' => json_decode($cached->monthly_profit,true),
+            'last_updated' => $cached->updated_at->format('Y-m-d H:i:s')
+        ];
+        $filename = 'reports/parking_data_'. $cached->location .' '. now()->timestamp . '.xlsx';
+        Excel::store(new ParkingExport([$data]), $filename, 'filebase');
+
+        // Generate a temporary (60-minute) signed download URL
+        $downloadUrl = Storage::disk('filebase')->temporaryUrl(
+            $filename,
+            now()->addMinutes(60)
+        );
+        return response()->json([
+            'success' => $downloadUrl
+        ], 200);
+    }
+
+    public function getAllLocationsReport(){
+        $locations = Location::pluck('id');
+        $cached = $this->getCachedDashboardData();
+        $data = [[
+            'location' => $cached->location,
+            'total_profit' => $cached->total_profit,
+            'available_public_spots' => $cached->available_public_spots,
+            'available_reservable_spots' => $cached->available_reservable_spots,
+            'total_users' => $cached->total_users,
+            'popular_public_spots' => json_decode($cached->popular_public_spots,true),
+            'popular_reservable_spots' => json_decode($cached->popular_reservable_spots,true),
+            'active_user_accounts' => $cached->active_user_accounts,
+            'inactive_user_accounts' => $cached->inactive_user_accounts,
+            'popular_gifts' => json_decode($cached->popular_gifts,true),
+            'monthly_profit' => json_decode($cached->monthly_profit,true),
+            'last_updated' => $cached->updated_at->format('Y-m-d H:i:s')
+        ]];
+        foreach ($locations as $location_id){
+            $cached = $this->getCachedDashboardData($location_id);
+            $data[] = [
+                'location' => $cached->location,
+                'total_profit' => $cached->total_profit,
+                'available_public_spots' => $cached->available_public_spots,
+                'available_reservable_spots' => $cached->available_reservable_spots,
+                'total_users' => $cached->total_users,
+                'popular_public_spots' => json_decode($cached->popular_public_spots,true),
+                'popular_reservable_spots' => json_decode($cached->popular_reservable_spots,true),
+                'active_user_accounts' => $cached->active_user_accounts,
+                'inactive_user_accounts' => $cached->inactive_user_accounts,
+                'popular_gifts' => json_decode($cached->popular_gifts,true),
+                'monthly_profit' => json_decode($cached->monthly_profit,true),
+                'last_updated' => $cached->updated_at->format('Y-m-d H:i:s')
+            ];
+        }
+        $filename = 'reports/parking_data_'. 'collection' .' '. now()->timestamp . '.xlsx';
+        Excel::store(new ParkingExport($data), $filename, 'filebase');
+
+        // Generate a temporary (60-minute) signed download URL
+        $downloadUrl = Storage::disk('filebase')->temporaryUrl(
+            $filename,
+            now()->addMinutes(60)
+        );
+        return response()->json([
+            'success' => $downloadUrl
+        ], 200);
+    }
+
+    // Private calculation methods (your original logic)
+    private function calculateTotalProfit($location_id = null)
+    {
         $guestsProfit = Guest_Spot_Log::where('is_payed',1)->when($location_id, function ($query, $location_id) {
             return $query->where('location_id', $location_id);
         })->sum('invoice_price');
+
         $usersPublicProfit = Public_Spot_Log::where('is_payed',1)->when($location_id, function ($query, $location_id) {
             return $query->where('location_id', $location_id);
         })->sum('invoice_price');
+
         $usersReservableProfit = Reservable_Spot_Log::where('is_payed',1)->when($location_id, function ($query, $location_id) {
             return $query->whereHas('reservableSpot', function ($q) use ($location_id) {
                 $q->where('location_id', $location_id);
             });
         })->sum('invoice_price');
 
-        return response()->json(['success'=>round($guestsProfit + $usersPublicProfit + $usersReservableProfit,2)],200);
+        return round($guestsProfit + $usersPublicProfit + $usersReservableProfit, 2);
     }
 
-    public function getAvailablePublicSpots($location_id = null){
-        if($location_id){
-            $location = $this->checkLocation($location_id);
-            if(!$location){
-                return response()->json(['error' => 'location not found']);
-            }
-        }
-        $publicSpots = Public_Spot::where('is_active',1)->when($location_id, function ($query, $location_id) {
-            return $query->where('location_id', $location_id);
-        })->count();
-        return response()->json(['success'=>$publicSpots],200);
-    }
-
-    public function getAvailableReservableSpots($location_id = null){
-        if($location_id){
-            $location = $this->checkLocation($location_id);
-            if(!$location){
-                return response()->json(['error' => 'location not found']);
-            }
-        }
-        $reservableSpots = Reservable_Spot::where('is_active',1)->when($location_id, function ($query, $location_id) {
-            return $query->where('location_id', $location_id);
-        })->count();
-        return response()->json(['success'=>$reservableSpots],200);
-    }
-
-    public function getTotalUsers(){
-        $users = User::count();
-        return response()->json(['success'=>$users],200);
-    }
-    ####################################################
-    public function getPopularPublicSpots($location_id = null)
+    private function calculateAvailablePublicSpots($location_id = null)
     {
-        if($location_id){
-            $location = $this->checkLocation($location_id);
-            if(!$location){
-                return response()->json(['error' => 'location not found']);
-            }
-        }
-        $popularPublicSpots = Public_Spot_Used::when($location_id, function ($query, $location_id) {
+        return Public_Spot::where('is_active',1)->when($location_id, function ($query, $location_id) {
+            return $query->where('location_id', $location_id);
+        })->count();
+    }
+
+    private function calculateAvailableReservableSpots($location_id = null)
+    {
+        return Reservable_Spot::where('is_active',1)->when($location_id, function ($query, $location_id) {
+            return $query->where('location_id', $location_id);
+        })->count();
+    }
+
+    private function calculateTotalUsers()
+    {
+        return User::count();
+    }
+
+    private function calculatePopularPublicSpots($location_id = null)
+    {
+        return Public_Spot_Used::when($location_id, function ($query, $location_id) {
             return $query->where('location_id', $location_id);
         })->select('spot_code', DB::raw('COUNT(*) as count'))
             ->groupBy('spot_code')
             ->orderByDesc('count')
             ->limit(5)
-            ->get();
-        return response()->json(['success'=>$popularPublicSpots],200);
+            ->get()
+            ->toArray();
     }
 
-    public function getPopularReservableSpots($location_id = null)
+    private function calculatePopularReservableSpots($location_id = null)
     {
-        if($location_id){
-            $location = $this->checkLocation($location_id);
-            if(!$location){
-                return response()->json(['error' => 'location not found']);
-            }
-        }
-        $popularReservableSpots = Reservable_Spot_Log::when($location_id, function ($query, $location_id) {
+        return Reservable_Spot_Log::when($location_id, function ($query, $location_id) {
             $query->whereHas('reservableSpot', function ($q) use ($location_id) {
                 $q->where('location_id', $location_id);
             });
@@ -114,37 +344,34 @@ class DashboardController extends Controller
             ->groupBy('reservable_spot_id')
             ->orderByDesc('count')
             ->limit(5)
-            ->with('reservableSpot:spot_code,id') // eager load only spot_code + id
+            ->with('reservableSpot:spot_code,id')
             ->get()
             ->map(function ($log) {
                 return [
                     'spot_code' => $log->reservableSpot->spot_code ?? 'Unknown',
                     'count' => $log->count,
                 ];
-            });
-        return response()->json(['success'=>$popularReservableSpots],200);
+            })
+            ->toArray();
     }
 
-    public function getUserAccountStatus()
+    private function calculateActiveUsers()
     {
-        $counts = User_Data::select('is_active', DB::raw('COUNT(*) as total'))
-            ->groupBy('is_active')
-            ->get()
-            ->mapWithKeys(function ($item) {
-                return [
-                    $item->is_active ? 'active' : 'inactive' => $item->total
-                ];
-            });
-        return response()->json(['success'=>$counts],200);
+        return User_Data::where('is_active', 1)->count();
     }
 
-    public function getPopularGifts()
+    private function calculateInactiveUsers()
     {
-        $topGifts = User_Gift::select('gift_id', DB::raw('COUNT(*) as usage_count'))
+        return User_Data::where('is_active', 0)->count();
+    }
+
+    private function calculatePopularGifts()
+    {
+        return User_Gift::select('gift_id', DB::raw('COUNT(*) as usage_count'))
             ->groupBy('gift_id')
             ->orderByDesc('usage_count')
             ->limit(3)
-            ->with('gift:id,description,discount_percentage,cost') // only fetch required fields
+            ->with('gift:id,description,discount_percentage,cost')
             ->get()
             ->map(function ($item) {
                 return [
@@ -153,21 +380,14 @@ class DashboardController extends Controller
                     'cost' => $item->gift->cost ?? 'Unknown',
                     'usage_count' => $item->usage_count,
                 ];
-            });
-
-        return response()->json(['success'=>$topGifts],200);
+            })
+            ->toArray();
     }
 
-    public function getMonthlyProfit($location_id = null)
+    private function calculateMonthlyProfit($location_id = null)
     {
-        if($location_id){
-            $location = $this->checkLocation($location_id);
-            if(!$location){
-                return response()->json(['error' => 'location not found']);
-            }
-        }
         $months = collect(range(1, 12))->mapWithKeys(fn($m) => [
-            \Carbon\Carbon::create()->month($m)->format('M') => 0
+            Carbon::create()->month($m)->format('M') => 0
         ]);
 
         $getMonthlySums = function ($model, $dateColumn, $sumColumn, $filters = []) use ($location_id) {
@@ -176,16 +396,14 @@ class DashboardController extends Controller
                 DB::raw("SUM($sumColumn) as total")
             );
 
-            // Use whereHas for Reservable_Spot_Log relation filter
             if ($model === \App\Models\Reservable_Spot_Log::class && $location_id) {
-                $query->whereHas('reservableSpot', function ($q) use ($location_id, $filters) {
+                $query->whereHas('reservableSpot', function ($q) use ($location_id) {
                     $q->where('location_id', $location_id);
                 });
-            } elseif ($location_id) {
+            } elseif ($location_id && !empty($filters['location_column'])) {
                 $query->where($filters['location_column'], $location_id);
             }
 
-            // Apply other optional filters
             if (!empty($filters['extra'])) {
                 foreach ($filters['extra'] as $col => $val) {
                     $query->where($col, $val);
@@ -195,7 +413,7 @@ class DashboardController extends Controller
             return $query->groupBy(DB::raw("MONTH($dateColumn)"))
                 ->pluck('total', 'month')
                 ->mapWithKeys(fn($value, $monthNum) => [
-                    \Carbon\Carbon::create()->month($monthNum)->format('M') => round($value,2)
+                    Carbon::create()->month($monthNum)->format('M') => round($value, 2)
                 ]);
         };
 
@@ -221,9 +439,10 @@ class DashboardController extends Controller
         );
 
         $totalMonthly = $months->map(fn($_, $month) =>
-            ($guests[$month] ?? 0) + ($public[$month] ?? 0) + ($reservable[$month] ?? 0)
+        round(($guests[$month] ?? 0) + ($public[$month] ?? 0) + ($reservable[$month] ?? 0), 2)
         );
 
-        return response()->json(['success' => $totalMonthly], 200);
+        // Return as array to maintain order
+        return $totalMonthly->toArray();
     }
 }
