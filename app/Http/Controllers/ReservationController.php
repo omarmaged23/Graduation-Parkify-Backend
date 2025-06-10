@@ -125,7 +125,7 @@ class ReservationController extends Controller
                 $this->sendSms("Not enough balance to cancel reservation.\nMake sure you account has enough credits to cancel reservation.",$user->userData->phone);
                 return response()->json(['error'=>'user not enough balance to cancel reservation'],422);
             }
-            $user->userData()->decrement('balance',1000);
+            $user->userData()->decrement('balance',$total);
         }
         try {
             DB::transaction(function () use ($request,$reservation){
