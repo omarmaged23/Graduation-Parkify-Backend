@@ -202,12 +202,12 @@ class ParkifySeeder extends Seeder
         // generate reservable spots
         Reservable_Spot::create([
             'spot_code' => 'R1x1',
-            'management_id' => 1,
+            'management_id' => 2,
             'location_id' => 1,
         ]);
         Reservable_Spot::create([
             'spot_code' => 'R2x2',
-            'management_id' => 1,
+            'management_id' => 2,
             'location_id' => 1,
         ]);
 
@@ -226,12 +226,12 @@ class ParkifySeeder extends Seeder
         // generate reservable spots
         Reservable_Spot::create([
             'spot_code' => 'RO1x1',
-            'management_id' => 1,
+            'management_id' => 2,
             'location_id' => 2,
         ]);
         Reservable_Spot::create([
             'spot_code' => 'RO2x2',
-            'management_id' => 1,
+            'management_id' => 2,
             'location_id' => 2,
         ]);
         // generate public spots
@@ -249,12 +249,12 @@ class ParkifySeeder extends Seeder
         // generate reservable spots
         Reservable_Spot::create([
             'spot_code' => 'RS1x1',
-            'management_id' => 1,
+            'management_id' => 2,
             'location_id' => 3,
         ]);
         Reservable_Spot::create([
             'spot_code' => 'RS2x2',
-            'management_id' => 1,
+            'management_id' => 2,
             'location_id' => 3,
         ]);
         // generate public spots
@@ -272,12 +272,12 @@ class ParkifySeeder extends Seeder
         // generate reservable spots
         Reservable_Spot::create([
             'spot_code' => 'RK1x1',
-            'management_id' => 1,
+            'management_id' => 2,
             'location_id' => 4,
         ]);
         Reservable_Spot::create([
             'spot_code' => 'RK2x2',
-            'management_id' => 1,
+            'management_id' => 2,
             'location_id' => 4,
         ]);
         // generate public spots
@@ -295,12 +295,12 @@ class ParkifySeeder extends Seeder
         // generate reservable spots
         Reservable_Spot::create([
             'spot_code' => 'RD1x1',
-            'management_id' => 1,
+            'management_id' => 2,
             'location_id' => 5,
         ]);
         Reservable_Spot::create([
             'spot_code' => 'RD2x2',
-            'management_id' => 1,
+            'management_id' => 2,
             'location_id' => 5,
         ]);
         // generate spot logs with payed status

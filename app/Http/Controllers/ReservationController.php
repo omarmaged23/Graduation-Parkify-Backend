@@ -176,6 +176,34 @@ class ReservationController extends Controller
         if(!$activeReservation){
             return response()->json(['error'=> 'user has no active reservations'],422);
         }
+        $activeReservation = $activeReservation->with(['reservableSpot:id,spot_code'])->first();
         return response()->json(['success'=> $activeReservation],200);
+    }
+    public function getReservationCountDown()
+    {
+        $activeReservation = auth('api')->user()->activeReservation;
+        if(!$activeReservation){
+            return response()->json(['error'=> 'user has no active reservations'],422);
+        }
+        $now = Carbon::now();
+        $createdAt = $activeReservation->created_at;
+        $expectedTime = $activeReservation->expected_arrival;
+        $reservationDifference = $createdAt->diffInSeconds($expectedTime,false);
+        $countDown = $now->diffInSeconds($expectedTime,false);
+        return response()->json(['success'=> ['reservation_difference'=>$reservationDifference,'countdown'=>$countDown]]);
+    }
+    public function getReservationCountUp()
+    {
+        $activeReservation = auth('api')->user()->activeReservation;
+        if(!$activeReservation){
+            return response()->json(['error'=> 'user has no active reservations'],422);
+        }
+        $now = Carbon::now();
+        $expectedTime = $activeReservation->expected_arrival;
+        $diff = $now->diff($expectedTime,false);
+        $hour = $diff->h + ($diff->d * 24);
+        $min = $diff->i;
+        $sec = $diff->s;
+        return response()->json(['success' => ['hour' => $hour, 'min' => $min, 'sec' => $sec]]);
     }
 }

@@ -25,6 +25,7 @@ class Reservation extends Model
     }
 
     protected $casts = [
+        'created_at' => 'datetime',
         'expected_arrival' => 'datetime',
     ];
 }

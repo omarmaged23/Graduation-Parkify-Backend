@@ -322,47 +322,79 @@ class DashboardController extends Controller
         return User::count();
     }
 
+    private function calculateTopSpotsWithOthers($query, $groupColumn, $displayCallback, $limit = 4)
+    {
+        $grouped = $query
+            ->select($groupColumn, DB::raw('COUNT(*) as count'))
+            ->groupBy($groupColumn)
+            ->orderByDesc('count')
+            ->get();
+
+        $total = $grouped->sum('count');
+
+        $topItems = $grouped->take($limit);
+        $result = [];
+
+        $usedPercentage = 0;
+        foreach ($topItems as $item) {
+            $percentage = $total > 0 ? round(($item->count / $total) * 100, 2) : 0;
+            $usedPercentage += $percentage;
+
+            $result[] = [
+                'spot_code' => $displayCallback($item),
+                'percentage' => $percentage,
+            ];
+        }
+
+        // Always add "Others" — even if percentage is 0
+        $othersPercentage = max(0, round(100 - $usedPercentage, 2));
+
+        $result[] = [
+            'spot_code' => 'Others',
+            'percentage' => $othersPercentage,
+        ];
+
+        return $result;
+    }
+
     private function calculatePopularPublicSpots($location_id = null)
     {
-        return Public_Spot_Used::when($location_id, function ($query, $location_id) {
-            return $query->where('location_id', $location_id);
-        })->select('spot_code', DB::raw('COUNT(*) as count'))
-            ->groupBy('spot_code')
-            ->orderByDesc('count')
-            ->limit(5)
-            ->get()
-            ->toArray();
+        $query = Public_Spot_Used::query();
+
+        if ($location_id) {
+            $query->where('location_id', $location_id);
+        }
+
+        return $this->calculateTopSpotsWithOthers($query, 'spot_code', fn($item) => $item->spot_code);
     }
 
     private function calculatePopularReservableSpots($location_id = null)
     {
-        return Reservable_Spot_Log::when($location_id, function ($query, $location_id) {
-            $query->whereHas('reservableSpot', function ($q) use ($location_id) {
-                $q->where('location_id', $location_id);
-            });
-        })->select('reservable_spot_id', DB::raw('COUNT(*) as count'))
-            ->groupBy('reservable_spot_id')
-            ->orderByDesc('count')
-            ->limit(5)
-            ->with('reservableSpot:spot_code,id')
-            ->get()
-            ->map(function ($log) {
-                return [
-                    'spot_code' => $log->reservableSpot->spot_code ?? 'Unknown',
-                    'count' => $log->count,
-                ];
-            })
-            ->toArray();
+        $query = Reservable_Spot_Log::with('reservableSpot:id,spot_code');
+
+        if ($location_id) {
+            $query->whereHas('reservableSpot', fn($q) => $q->where('location_id', $location_id));
+        }
+
+        return $this->calculateTopSpotsWithOthers($query, 'reservable_spot_id', function ($item) {
+            return $item->reservableSpot->spot_code ?? 'Unknown';
+        });
     }
 
     private function calculateActiveUsers()
     {
-        return User_Data::where('is_active', 1)->count();
+        $total = User_Data::count();
+        $active = User_Data::where('is_active', 1)->count();
+
+        return $total > 0 ? round(($active / $total) * 100, 2) : 0;
     }
 
     private function calculateInactiveUsers()
     {
-        return User_Data::where('is_active', 0)->count();
+        $total = User_Data::count();
+        $inactive = User_Data::where('is_active', 0)->count();
+
+        return $total > 0 ? round(($inactive / $total) * 100, 2) : 0;
     }
 
     private function calculatePopularGifts()

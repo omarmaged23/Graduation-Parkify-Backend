@@ -40,6 +40,8 @@ Route::middleware('auth:api')->group(function () {
     // Spot reservation
     Route::post('/user/reserveSpot',[ReservationController::class,'reserveSpot']);
     Route::get('/user/getActiveReservation',[ReservationController::class,'getActiveReservation']);
+    Route::get('/user/getActiveReservation/countdown',[ReservationController::class,'getReservationCountDown']);
+    Route::get('/user/getActiveReservation/countup',[ReservationController::class,'getReservationCountUp']);
     Route::post('/user/cancelReservation',[ReservationController::class,'cancelReservation']);
     Route::post('/user/deactivateReservationBlocker',[ReservationController::class,'deactivateReservationBlocker']);
     // Get separate logs
@@ -111,8 +113,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/getPointsPerHour', [\App\Http\Controllers\Admin\SpotManagementController::class, 'getPointsPerHour']);
     Route::get('/getUserWithLogs/{id}',[\App\Http\Controllers\Admin\ManageUserController::class, 'getUserWithLogs']);
     Route::get('/getAllLocations',[\App\Http\Controllers\Admin\LocationController::class, 'getAllLocations']);
-
 });
+
 Route::post('/parkCar/{location}',[\App\Http\Controllers\SpotLogController::class,'parkCar']);
 Route::post('/exitParking/{location}',[\App\Http\Controllers\SpotLogController::class,'exitParking']);
 Route::post('/logUsedPublicSpot/{location}',[\App\Http\Controllers\PublicSpotLogController::class,'logUsedPublicSpot']);
