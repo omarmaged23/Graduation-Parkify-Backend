@@ -345,8 +345,6 @@ class DashboardController extends Controller
                 'percentage' => $percentage,
             ];
         }
-
-        // Always add "Others" — even if percentage is 0
         $othersPercentage = max(0, round(100 - $usedPercentage, 2));
 
         $result[] = [
