@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Models\Refund;
 use Illuminate\Http\Request;
@@ -27,6 +28,8 @@ class RefundController extends Controller
         if(!$status){
             return response()->json(['error' => 'Something went wrong while updating your refund percentage.']);
         }
+        $auth = auth('admin')->user();
+        event(new AdminActionPerformed($auth->name,$auth->email,"Changed refund percentage to $status->percentage",$auth->role));
         return response()->json(['success' => 'Successfully updated your refund percentage.']);
     }
 }

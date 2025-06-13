@@ -11,7 +11,14 @@ class ReservableSpotLogController extends Controller
         ->limit(10)
         ->get()
         ->map(function ($spot) {
-            return $spot->toArray() + ['spot_code' => $spot->reservableSpot->spot_code];
-        });    
+            return array_merge(
+                $spot->toArray(),
+                [
+                    'spot_code' => $spot->reservableSpot->spot_code,
+                    'entered_at'  => $spot->entered_at?->format('F jS g:i:s A'),
+                    'exited_at'   => $spot->exited_at?->format('F jS g:i:s A'),
+                ]
+            );
+        });
     }
 }

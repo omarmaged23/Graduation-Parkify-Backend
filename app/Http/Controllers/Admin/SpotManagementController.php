@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Models\Spot_Management;
 use Illuminate\Http\Request;
@@ -43,11 +44,14 @@ class SpotManagementController extends Controller
         } catch (\Exception $e){
             return response()->json(['error'=>'Public and Reservable Spots not found. '. $e->getMessage()]);
         }
+        $auth = auth('admin')->user();
+        event(new AdminActionPerformed($auth->name,$auth->email,"Changed Public and Reservable points-per-hour to $public->points_per_hour , $reservable->points_per_hour",$auth->role));
         return response()->json(['success'],200);
     }
     public function managePrices(Request $request,$type)
     {
         // handle reservable spot type
+        $auth = auth('admin')->user();
         if($type == 'reservable'){
             $request->validate([
                 'price_per_hour' => ['required','numeric','regex:/^\d+(\.\d{1,2})?$/'],
@@ -65,6 +69,7 @@ class SpotManagementController extends Controller
 //                'points_per_hour' => $request->points_per_hour,
             ]);
             if($status){
+                event(new AdminActionPerformed($auth->name,$auth->email,"Changed $type spots prices",$auth->role));
                 return response()->json(['success'=>'Reservation prices updated successfully.'],200);
             }
             return response()->json(['error'=>"Something went wrong while updating prices."],422);
@@ -86,6 +91,7 @@ class SpotManagementController extends Controller
 //            'points_per_hour' => $request->points_per_hour,
         ]);
         if($status){
+            event(new AdminActionPerformed($auth->name,$auth->email,"Changed $type spots prices",$auth->role));
             return response()->json(['success'=>'Public prices updated successfully.'],200);
         }
         return response()->json(['error'=>"Something went wrong while updating prices."],422);

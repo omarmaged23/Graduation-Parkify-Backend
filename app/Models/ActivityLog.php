@@ -5,19 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Billing extends Model
+class ActivityLog extends Model
 {
     use HasFactory;
+    protected $table = 'admin_activity_log';
     protected $guarded = [];
-    public $timestamps = false;
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-    // protected $casts = [
-    //     'completed_at' => 'datetime',
-    // ];
     protected $casts = [
         'created_at' => 'datetime:F jS g:i:s A',
     ];

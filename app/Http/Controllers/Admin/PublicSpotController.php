@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Models\Location;
 use App\Models\Public_Spot;
@@ -36,6 +37,8 @@ class PublicSpotController extends Controller
                 'type' => 'public'
             ];
             (new MqttService())->publish(sprintf('garage/%s/spots/add',$location),json_encode($spot),false);
+            $auth = auth('admin')->user();
+            event(new AdminActionPerformed($auth->name,$auth->email,"Added public spot $status->spot_code to location $location",$auth->role));
             return response()->json(['success'=>"Successfully added new public spot."],200);
         }
 
@@ -58,6 +61,8 @@ class PublicSpotController extends Controller
             'location_id' => $request->location_id
         ]);
         if($status){
+            $auth = auth('admin')->user();
+            event(new AdminActionPerformed($auth->name,$auth->email,"Edited spot $spot->spot_code",$auth->role));
             return response()->json(['success'=>"Successfully updated public spot."],200);
         }
 
@@ -73,6 +78,8 @@ class PublicSpotController extends Controller
         $status = $spot->delete();
         if($status){
             (new MqttService())->publish(sprintf('garage/%s/spots/delete',$location),$spot->spot_code,false);
+            $auth = auth('admin')->user();
+            event(new AdminActionPerformed($auth->name,$auth->email,"Deleted spot $spot->spot_code",$auth->role));
             return response()->json(['success'=>"Successfully deleted public spot."],200);
         }
         return response()->json(['error' => 'Something went wrong while deleting public spot.'],422);

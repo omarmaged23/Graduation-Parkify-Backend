@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Models\Guest_Spot_Log;
 use App\Models\User;
@@ -110,6 +111,9 @@ class ManageUserController extends Controller
         if (!$status) {
             return response()->json(['error' => "Something went while updating user status wrong."], 422);
         }
+        $auth = auth('admin')->user();
+        $st = $request->status ? 'Active' : 'In-Active';
+        event(new AdminActionPerformed($auth->name,$auth->email,"Changed user $user->email account status to ".$st,$auth->role));
         return response()->json(['success' => "User status updated successfully."], 200);
     }
 

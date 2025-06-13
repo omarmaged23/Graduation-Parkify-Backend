@@ -10,9 +10,7 @@ use App\Models\Mqtt_Spot_Log;
 use App\Models\Public_Spot;
 use App\Models\Reservable_Spot;
 use App\Services\MqttService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 

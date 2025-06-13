@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('type')->unique();
             $table->float('price_per_hour');
-            $table->float('additional_guest_fees')->default(0);
-            $table->float('reservation_fees')->default(0);
-            $table->integer('time_restriction')->default(0);
-            $table->integer('points_per_hour')->default(0);
+            $table->float('additional_guest_fees')->default(10);
+            $table->float('reservation_fees')->default(20);
+            $table->integer('time_restriction')->default(60);
+            $table->integer('points_per_hour')->default(20);
             $table->timestamps();
         });
     }

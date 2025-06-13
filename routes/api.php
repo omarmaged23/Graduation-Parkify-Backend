@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\UserAuthController;
@@ -25,7 +26,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/user/register', [UserAuthController::class, 'register']);
 Route::post('/user/login', [UserAuthController::class, 'login']);
-Route::post('/admin/register', [AdminAuthController::class, 'register']);
 Route::post('/admin/login', [AdminAuthController::class, 'login']);
 
 Route::post('/paymobCallback',[\App\Http\Controllers\PaymentController::class,'paymobCallback'])->name('paymob.callback');
@@ -58,6 +58,12 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/user/getPointsAndBalance',[userDataController::class,'getPointsAndBalance']);
 });
 Route::middleware('auth:admin')->group(function () {
+    // Add new Admin
+    Route::post('/admin/register', [AdminAuthController::class, 'register']);
+    // Change Admin Status
+    Route::post('/admin/changeAdminStatus/{id}', [AdminController::class, 'changeAdminStatus']);
+    // Get Activity Log
+    Route::get('/admin/getActivityLog',[AdminController::class,'getActivityLog']);
     // Logout
     Route::post('/admin/logout', [AdminAuthController::class, 'logout']);
     // Dashboard

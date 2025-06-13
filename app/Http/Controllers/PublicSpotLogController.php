@@ -14,7 +14,14 @@ class PublicSpotLogController extends Controller
         ->limit(10)
         ->get()
         ->map(function ($spot) {
-            return $spot->toArray() + ['spot_code' => 'Public Spot'];
+            return array_merge(
+                $spot->toArray(),
+                [
+                    'spot_code'   => 'Public Spot',
+                    'entered_at'  => $spot->entered_at?->format('F jS g:i:s A'),
+                    'exited_at'   => $spot->exited_at?->format('F jS g:i:s A'),
+                ]
+            );
         });
     }
 

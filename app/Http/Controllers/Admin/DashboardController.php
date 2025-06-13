@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\AdminActionPerformed;
 use App\Exports\ParkingExport;
 use App\Http\Controllers\Controller;
 use App\Models\Dashboard; // Your new model
@@ -204,6 +205,7 @@ class DashboardController extends Controller
      */
     public function getAllDashboardData($location_id = null)
     {
+        $auth = auth()->user();
         if($location_id && !$this->checkLocation($location_id)){
             return response()->json(['error' => 'location not found']);
         }
@@ -231,12 +233,15 @@ class DashboardController extends Controller
             $filename,
             now()->addMinutes(60)
         );
+        event(new AdminActionPerformed($auth->name,$auth->email,"Generated $cached->location Report",$auth->role));
+
         return response()->json([
             'success' => $downloadUrl
         ], 200);
     }
 
     public function getAllLocationsReport(){
+        $auth = auth('admin')->user();
         $locations = Location::pluck('id');
         $cached = $this->getCachedDashboardData();
         $data = [[
@@ -278,6 +283,8 @@ class DashboardController extends Controller
             $filename,
             now()->addMinutes(60)
         );
+        event(new AdminActionPerformed($auth->name,$auth->email,"Generated System Report",$auth->role));
+
         return response()->json([
             'success' => $downloadUrl
         ], 200);

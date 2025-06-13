@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Models\Location;
 use Illuminate\Http\Request;
@@ -22,6 +23,8 @@ class LocationController extends Controller
         if (!$status) {
             return response()->json(['error' => 'Location not created'], 422);
         }
+        $auth = auth('admin')->user();
+        event(new AdminActionPerformed($auth->name,$auth->email,"Added new system branch $status->name",$auth->role));
         return response()->json(['success' => 'Location created'], 200);
     }
     public function getLocation($id)
@@ -50,6 +53,8 @@ class LocationController extends Controller
         if (!$status) {
             return response()->json(['error' => 'Something went wrong while updating your location'], 422);
         }
+        $auth = auth('admin')->user();
+        event(new AdminActionPerformed($auth->name,$auth->email,"Edited system location $location->name",$auth->role));
         return response()->json(['success' => 'Location updated successfully'], 200);
     }
 
@@ -65,6 +70,8 @@ class LocationController extends Controller
         if (!$status) {
             return response()->json(['error' => "Something went while updating location status wrong."], 422);
         }
+        $auth = auth('admin')->user();
+        event(new AdminActionPerformed($auth->name,$auth->email,"Changed location $location->name status to $request->status",$auth->role));
         return response()->json(['success' => "Location status updated successfully."], 200);
     }
 
@@ -77,6 +84,8 @@ class LocationController extends Controller
         if (!$status) {
             return response()->json(['error' => 'Something went wrong while deleting your location'], 422);
         }
+        $auth = auth('admin')->user();
+        event(new AdminActionPerformed($auth->name,$auth->email,"Deleted system location $location->name",$auth->role));
         return response()->json(['success' => 'Location deleted successfully'], 200);
     }
 

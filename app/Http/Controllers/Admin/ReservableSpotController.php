@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\AdminActionPerformed;
 use App\Http\Controllers\Controller;
 use App\Models\Location;
 use App\Models\Reservable_Spot;
@@ -37,6 +38,8 @@ class ReservableSpotController extends Controller
                 'type' => 'reservable'
             ];
             (new MqttService())->publish(sprintf('garage/%s/spots/add',$location),json_encode($spot),false);
+            $auth = auth('admin')->user();
+            event(new AdminActionPerformed($auth->name,$auth->email,"Added reservable spot $status->spot_code to location $location",$auth->role));
             return response()->json(['success'=>"Successfully added new reservable spot."],200);
         }
 
@@ -59,6 +62,8 @@ class ReservableSpotController extends Controller
             'location_id' => $request->location_id
         ]);
         if($status){
+            $auth = auth('admin')->user();
+            event(new AdminActionPerformed($auth->name,$auth->email,"Edited spot $spot->spot_code",$auth->role));
             return response()->json(['success'=>"Successfully updated reservable spot."],200);
         }
 
@@ -74,6 +79,8 @@ class ReservableSpotController extends Controller
         $status = $spot->delete();
         if($status){
             (new MqttService())->publish(sprintf('garage/%s/spots/delete',$location),$spot->spot_code,false);
+            $auth = auth('admin')->user();
+            event(new AdminActionPerformed($auth->name,$auth->email,"Deleted spot $spot->spot_code",$auth->role));
             return response()->json(['success'=>"Successfully deleted reservable spot."],200);
         }
         return response()->json(['error' => 'Something went wrong while deleting reservable spot.'],422);
