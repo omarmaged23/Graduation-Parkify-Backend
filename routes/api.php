@@ -105,7 +105,6 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/getGuestLogs',[\App\Http\Controllers\Admin\ManageUserController::class, 'getGuestLogs']);
     // Location Management
     Route::post('/admin/addLocation',[\App\Http\Controllers\Admin\LocationController::class, 'addLocation']);
-    Route::get('/admin/getLocation/{id}',[\App\Http\Controllers\Admin\LocationController::class, 'getLocation']);
     Route::post('/admin/editLocation/{id}',[\App\Http\Controllers\Admin\LocationController::class, 'editLocation']);
     Route::post('/admin/changeLocationStatus/{id}',[\App\Http\Controllers\Admin\LocationController::class, 'changeLocationStatus']);
     Route::post('/admin/deleteLocation',[\App\Http\Controllers\Admin\LocationController::class, 'deleteLocation']);
@@ -114,6 +113,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('/admin/editRefundPercentage',[\App\Http\Controllers\Admin\RefundController::class, 'editRefundPercentage']);
 });
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/getLocation/{id}',[\App\Http\Controllers\Admin\LocationController::class, 'getLocation']);
     Route::get('/getAllGifts',[\App\Http\Controllers\Admin\GiftController::class, 'getAllGifts']);
     Route::get('/getSpotDetails', [\App\Http\Controllers\Admin\SpotManagementController::class, 'getSpotDetails']);
     Route::get('/getPointsPerHour', [\App\Http\Controllers\Admin\SpotManagementController::class, 'getPointsPerHour']);
