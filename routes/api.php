@@ -138,3 +138,8 @@ Route::post('/resetRetain', function(){
     $mqttService->publish('garage/obour/spots/init','',true);
     return 'done';
 });
+
+Route::post('/resetMQspot',function (){
+    \DB::table('mqtt_spot_logs')->delete();
+    return response()->json(['success' => 'mqtt spot logs deleted successfully']);
+});

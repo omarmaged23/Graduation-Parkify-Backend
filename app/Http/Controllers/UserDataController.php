@@ -23,17 +23,18 @@ class UserDataController extends Controller
             'plate' => ['required', 'string', 'unique:license__plates,plate', 'min:2']
         ]);
         try {
-            DB::transaction(function () use ($user, $request) {
-                $user->userData()->create([
+            $stmt = DB::transaction(function () use ($user, $request) {
+                $data = $user->userData()->create([
                     'national' => $request->national,
                     'phone' => $request->phone
                 ]);
 
-                $plates = $user->licensePlates()->create([
+                $user->licensePlates()->create([
                     'plate' => $request->plate
                 ]);
+                return response()->json(['userData' => $data]);
             });
-            return response()->json(['userData' => $user->userData]);
+            return $stmt;
         } catch (\Exception $e) {
             return response()->json(['userData' => null]);
         }
