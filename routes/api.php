@@ -56,8 +56,6 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/user/getTransactionHistory',[userDataController::class,'getTransactionHistory']);
     // Get Points And Balance
     Route::get('/user/getPointsAndBalance',[userDataController::class,'getPointsAndBalance']);
-    // Get Spot Details
-    Route::get('/user/getAvailableSpots/{locationID}',[\App\Http\Controllers\AvailableSpotsController::class,'getAvailableSpots']);
 });
 Route::middleware('auth:admin')->group(function () {
     // Add new Admin
@@ -126,7 +124,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/parkCar/{location}',[\App\Http\Controllers\SpotLogController::class,'parkCar']);
 Route::post('/exitParking/{location}',[\App\Http\Controllers\SpotLogController::class,'exitParking']);
 Route::post('/logUsedPublicSpot/{location}',[\App\Http\Controllers\PublicSpotLogController::class,'logUsedPublicSpot']);
-
+// Get Spot Details
+Route::get('/getAvailableSpots/{locationID}',[\App\Http\Controllers\AvailableSpotsController::class,'getAvailableSpots']);
 Route::get('/getParkedCars', function (){
     return \App\Models\Mqtt_Spot_Log::all();
 });
