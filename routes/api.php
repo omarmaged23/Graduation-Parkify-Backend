@@ -56,6 +56,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/user/getTransactionHistory',[userDataController::class,'getTransactionHistory']);
     // Get Points And Balance
     Route::get('/user/getPointsAndBalance',[userDataController::class,'getPointsAndBalance']);
+    // Get Spot Details
+    Route::get('/user/getAvailableSpots/{locationID}',[\App\Http\Controllers\AvailableSpotsController::class,'getAvailableSpots']);
 });
 Route::middleware('auth:admin')->group(function () {
     // Add new Admin
