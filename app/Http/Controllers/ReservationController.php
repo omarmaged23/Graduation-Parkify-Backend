@@ -176,7 +176,7 @@ class ReservationController extends Controller
         if(!$activeReservation){
             return response()->json(['error'=> 'user has no active reservations'],422);
         }
-        $activeReservation = $activeReservation->with(['reservableSpot:id,spot_code'])->first();
+        $activeReservation = $activeReservation->with(['reservableSpot:id,spot_code','reservableSpot.location:id,name'])->first();
         return response()->json(['success'=> $activeReservation],200);
     }
     public function getReservationCountDown()
