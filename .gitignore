@@ -6,3 +6,4 @@ docker-compose.yaml.local
 Dockerfile.local
 supervisord.conf
 railway.json
+Dockerfile
