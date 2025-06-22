@@ -1,6 +1,7 @@
 # 🚗 Parkify Backend
 
-**Parkify** is a smart parking system that combines **AI**, **IoT**, and modern web/mobile technologies to optimize parking in private garages. This repository includes the **Laravel-based backend**, built with **Octane + FrankenPHP** for ultra-fast response times and high concurrency.
+**Parkify** is a smart parking system for private garages, built with **Laravel Octane + FrankenPHP** for high performance. It combines **AI**, **IoT**, and mobile/web technologies to enable real-time spot tracking, automated access, and secure payments.
+
 ---
 ## 🎥 Demo
 
