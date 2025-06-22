@@ -10,9 +10,10 @@
 - **Laravel Octane + FrankenPHP**
 - **MySQL**
 - **MQTT (via HiveMQ)**
-- **REST APIs (JWT Auth)**
+- **REST APIs (Sanctum Auth)**
 - **ESP32 Integration**
 - **Paymob Payment Gateway**
+- **Twilio SMS API**
 
 ---
 
@@ -32,7 +33,7 @@
 - Account registration and secure login
 - Vehicle registration + license plate linking
 - Spot reservation and auto-cancellation
-- Real-time availability map (public + reserved spots)
+- Real-time availability display (public + reserved spots)
 - Unlock spot blockers using mobile app (via MQTT)
 - Live countdown + session tracking
 - Payment via Visa, MasterCard, Meeza (via Paymob)
@@ -46,13 +47,38 @@
 MQTT is used for **low-latency control** of ESP32 devices for:
 - Spot updates
 - Unlocking blockers
-- Detecting overstays
 - Real-time light/servo control
+- Displaying LCD messages on entry and exit gates
 
-### Topics:
-- `parking/spot/{id}/status`
-- `parking/spot/{id}/unlock`
-- `parking/spot/{id}/overstay`
+---
+
+## 📲 Twilio Integration – SMS Notifications
+
+We use **Twilio** to send **real-time SMS alerts** for critical events:
+- 🚨 **Insufficient Balance** – The user receives an SMS if their balance is too low during exit.
+- ✅ **Payment Confirmation** – After a successful recharge via Paymob, a confirmation SMS is sent to the user.
+
+---
+
+## 🚗 Entry/Exit Flow – User vs. Guest
+
+### 🔐 User Entry
+- License plate is detected by ESP32 camera → verified by AI (YOLOv8 + OCR)
+- If reservation is valid → blocker unlocks via MQTT → entry allowed
+
+### 🚪 User Exit
+- Backend calculates parking fee and deducts it directly from the user’s balance
+- If balance is sufficient → gate opens automatically
+- If not → SMS alert via Twilio prompts the user to recharge
+
+### 🧾 Guest Entry
+- Public spot availability is checked in real-time
+- If available and within allowed guest capacity → entry is granted
+
+### 📤 Guest Exit
+- Backend generates a **QR code invoice** displayed on the screen
+- Guest scans and pays via Paymob payment gateway
+- Upon successful payment → exit gate opens automatically
 
 ---
 
@@ -74,12 +100,12 @@ Using **FrankenPHP** with **Laravel Octane**, we achieved:
 - MQTT Broker (e.g., HiveMQ)
 
 ### Installation
-
 ```bash
 git clone https://github.com/your-username/parkify-backend.git
 cd parkify-backend
 composer install
 cp .env.example .env
+## Setup your paymob,twilio and cloud storage api keys before proceeding
 php artisan key:generate
 php artisan migrate --seed
 php artisan octane:start --server=frankenphp
