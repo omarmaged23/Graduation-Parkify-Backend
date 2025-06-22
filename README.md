@@ -5,7 +5,7 @@
 ## 🎥 Demo
 
 See Parkify in action:  
-👉 [Watch Demo Video](https://your-demo-link.com)
+👉 [Watch Demo Video](https://drive.google.com/drive/u/0/folders/11eh6QYlDj93tCQoBidV0Z55gNJsBqdSG)
 
 ---
 ## ⚡ Tech Stack
